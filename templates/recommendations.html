@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Personalized Recommendations - SciLabIMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid animate__animated animate__fadeIn">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h1 class="display-6 fw-bold">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                        <span class="gradient-text">Your Personalized Recommendations</span>
+                    </h1>
+                    <p class="text-muted">Smart suggestions based on your usage patterns and department trends</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('recommendations', refresh='true') }}" class="btn btn-outline-primary rounded-pill">
+                        <i class="bi bi-arrow-repeat me-2"></i> Refresh
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Introduction Card -->
+    <div class="card mb-4 border-0 shadow-sm animate__animated animate__fadeIn">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="card-title mb-3 fw-bold">Welcome to Your Personalized Recommendations</h4>
+                    <p class="card-text">
+                        Our intelligent recommendation engine analyzes your usage patterns, department trends, 
+                        and role-specific needs to suggest items that may be relevant for your work.
+                    </p>
+                    <p class="card-text">
+                        These recommendations are regularly updated based on your lab activities and can help you:
+                    </p>
+                    <ul class="mb-0">
+                        <li>Discover items you might need but haven't used yet</li>
+                        <li>Stay consistent with department usage patterns</li> 
+                        <li>Plan your inventory needs more effectively</li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-center d-none d-md-block">
+                    <div class="p-3 rounded-circle bg-primary-subtle d-inline-flex align-items-center justify-content-center" style="width: 160px; height: 160px;">
+                        <i class="bi bi-graph-up-arrow text-primary" style="font-size: 80px;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if recommendations %}
+    <!-- Recommendations Grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5 staggered-list">
+        {% for rec in recommendations %}
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill">Score: {{ rec.score|round(1) }}</span>
+                        <span class="badge {% if rec.status == 'in_stock' %}bg-success-subtle text-success{% elif rec.status == 'low_stock' %}bg-warning-subtle text-warning{% else %}bg-danger-subtle text-danger{% endif %} rounded-pill">
+                            {{ rec.status|replace('_', ' ')|title }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body position-relative">
+                    <h5 class="card-title fw-bold mb-1">{{ rec.item_name }}</h5>
+                    <p class="mb-2 text-muted small">
+                        <i class="bi bi-tag me-1"></i> {{ rec.category|title }}
+                        {% if rec.location_name %}
+                        <span class="mx-1">•</span>
+                        <i class="bi bi-geo-alt me-1"></i> {{ rec.location_name }}
+                        {% endif %}
+                    </p>
+                    
+                    {% if rec.description %}
+                    <p class="card-text small">{{ rec.description|truncate(100) }}</p>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2" style="width: 24px; text-align: center;">
+                                <i class="bi bi-box text-primary"></i>
+                            </div>
+                            <div>
+                                <span class="fw-medium">{{ rec.quantity|round(2) }}</span> 
+                                <span class="text-muted">{{ rec.unit }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center">
+                            <div class="me-2" style="width: 24px; text-align: center;">
+                                <i class="bi bi-info-circle text-info"></i>
+                            </div>
+                            <div>
+                                <span class="small text-muted">{{ rec.reason }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pb-3">
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('items') }}?highlight={{ rec.item_id }}" class="btn btn-sm btn-primary flex-grow-1">
+                            <i class="bi bi-eye me-1"></i> View Details
+                        </a>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#checkoutModal"
+                                data-item-id="{{ rec.item_id }}"
+                                data-item-name="{{ rec.item_name }}">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm text-center p-5 animate__animated animate__fadeIn">
+        <div class="card-body">
+            <i class="bi bi-search text-muted mb-3" style="font-size: 48px;"></i>
+            <h3 class="card-title">No Recommendations Yet</h3>
+            <p class="card-text text-muted">
+                We need more data about your inventory usage to generate personalized recommendations.
+                <br>Try checking out some items or refreshing recommendations.
+            </p>
+            <a href="{{ url_for('recommendations', refresh='true') }}" class="btn btn-primary mt-3">
+                <i class="bi bi-arrow-repeat me-2"></i> Generate Recommendations
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Check Out Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('add_transaction') }}" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="item_id" id="modalItemId">
+                    <input type="hidden" name="type" value="check_out">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Item</label>
+                        <input type="text" class="form-control" id="modalItemName" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Check Out</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Scripts -->
+<script>
+    // Initialize modal data
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (checkoutModal) {
+        checkoutModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const itemId = button.getAttribute('data-item-id');
+            const itemName = button.getAttribute('data-item-name');
+            
+            document.getElementById('modalItemId').value = itemId;
+            document.getElementById('modalItemName').value = itemName;
+        });
+    }
+    
+    // Function to refresh recommendations
+    function refreshRecommendations() {
+        // Show loading spinner
+        const content = document.querySelector('.container-fluid');
+        content.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Refreshing your recommendations...</p>
+            </div>
+        `;
+        
+        // Reload the page after a delay to simulate processing
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    }
+</script>
+
+<!-- Custom styles -->
+<style>
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .gradient-text {
+        background: linear-gradient(45deg, #ff9d00, #ffcc80);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+</style>
+{% endblock %}

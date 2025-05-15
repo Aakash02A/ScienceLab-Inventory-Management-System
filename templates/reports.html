@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics & Reports - SciLabIMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid animate__animated animate__fadeIn">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h1 class="display-6 fw-bold">
+                        <i class="bi bi-graph-up-arrow text-primary me-2"></i> 
+                        <span class="gradient-text">Analytics & Reports</span>
+                    </h1>
+                    <p class="text-muted">Generate comprehensive reports and analyze your laboratory data</p>
+                </div>
+                <div>
+                    <span class="badge 
+                        {% if session.get('role') == 'admin' %}bg-danger
+                        {% elif session.get('role') == 'lab_manager' %}bg-primary
+                        {% elif session.get('role') == 'researcher' %}bg-success
+                        {% else %}bg-secondary{% endif %} px-3 py-2">
+                        <i class="bi 
+                            {% if session.get('role') == 'admin' %}bi-shield-lock-fill
+                            {% elif session.get('role') == 'lab_manager' %}bi-clipboard-data-fill
+                            {% elif session.get('role') == 'researcher' %}bi-eyeglasses
+                            {% else %}bi-mortarboard-fill{% endif %} me-1"></i>
+                        {{ session.get('role', '').replace('_', ' ').title() }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Role-specific permissions info banner -->
+            <div class="alert {% if session.get('role') == 'admin' %}alert-danger{% elif session.get('role') == 'lab_manager' %}alert-primary{% elif session.get('role') == 'researcher' %}alert-success{% else %}alert-secondary{% endif %} mb-4 animate__animated animate__fadeIn">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-2 fs-4"></i>
+                    <div>
+                        <p class="mb-0">
+                            {% if session.get('role') == 'admin' or session.get('role') == 'lab_manager' %}
+                                You have access to all reports and analytics features.
+                            {% elif session.get('role') == 'researcher' %}
+                                You have access to inventory status reports. Transaction history reports require Lab Manager permissions.
+                            {% else %}
+                                You have limited access to reports. Advanced reports require higher permissions.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report cards with animation -->
+    <div class="row row-cols-1 row-cols-md-2 g-4 report-grid">
+        <!-- Inventory Status Report -->
+        <div class="col report-item animate__animated animate__fadeIn animate__delay-1s">
+            <div class="card h-100 shadow-sm border-0 report-card hover-lift">
+                <div class="card-body position-relative p-4">
+                    <div class="report-icon-container position-absolute">
+                        <div class="report-icon bg-primary-subtle text-primary rounded-circle">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                    </div>
+                    <div class="ps-5 ms-4">
+                        <h5 class="card-title fw-bold">Inventory Status Report</h5>
+                        <p class="card-text text-muted">Get a comprehensive overview of your current inventory status, including low stock items, item categories, and total inventory value.</p>
+                        <div class="feature-list my-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Stock level summary</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Low stock and expiring items</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Inventory value by category</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-3">
+                    <a href="{{ url_for('inventory_status_report') }}" class="btn btn-primary w-100 fw-bold py-2">
+                        <i class="bi bi-file-earmark-bar-graph me-2"></i> Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transaction History Report (Admin and Lab Manager only) -->
+        {% if session.role in ['admin', 'lab_manager'] %}
+        <div class="col report-item animate__animated animate__fadeIn animate__delay-2s">
+            <div class="card h-100 shadow-sm border-0 report-card hover-lift">
+                <div class="card-body position-relative p-4">
+                    <div class="report-icon-container position-absolute">
+                        <div class="report-icon bg-success-subtle text-success rounded-circle">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                    </div>
+                    <div class="ps-5 ms-4">
+                        <h5 class="card-title fw-bold">Transaction History Report</h5>
+                        <p class="card-text text-muted">Analyze transaction patterns and usage history. Filter by date range, transaction type, and get detailed summaries.</p>
+                        <div class="feature-list my-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Usage statistics</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>User activity analysis</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Category-based consumption</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-3">
+                    <a href="{{ url_for('transaction_history_report') }}" class="btn btn-success w-100 fw-bold py-2">
+                        <i class="bi bi-file-earmark-text me-2"></i> Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Order Summary Report -->
+        <div class="col report-item animate__animated animate__fadeIn animate__delay-3s">
+            <div class="card h-100 shadow-sm border-0 report-card hover-lift">
+                <div class="card-body position-relative p-4">
+                    <div class="report-icon-container position-absolute">
+                        <div class="report-icon bg-info-subtle text-info rounded-circle">
+                            <i class="bi bi-cart"></i>
+                        </div>
+                    </div>
+                    <div class="ps-5 ms-4">
+                        <h5 class="card-title fw-bold">Order Summary Report</h5>
+                        <p class="card-text text-muted">Track orders by status, supplier, and date range. Analyze ordering patterns and costs.</p>
+                        <div class="feature-list my-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Order status summary</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Supplier distribution</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Cost analysis</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-1 mb-2">
+                            <span class="badge bg-warning-subtle text-warning rounded-pill">Coming Soon</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-3">
+                    <button type="button" class="btn btn-info w-100 fw-bold py-2" disabled>
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i> Coming Soon
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Usage Analytics -->
+        <div class="col report-item animate__animated animate__fadeIn animate__delay-4s">
+            <div class="card h-100 shadow-sm border-0 report-card hover-lift">
+                <div class="card-body position-relative p-4">
+                    <div class="report-icon-container position-absolute">
+                        <div class="report-icon bg-warning-subtle text-warning rounded-circle">
+                            <i class="bi bi-bar-chart"></i>
+                        </div>
+                    </div>
+                    <div class="ps-5 ms-4">
+                        <h5 class="card-title fw-bold">Usage Analytics</h5>
+                        <p class="card-text text-muted">Advanced analytics for consumption trends, user behavior, and predictive insights for inventory management.</p>
+                        <div class="feature-list my-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Consumption trends</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>Usage forecasting</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon bg-success-subtle text-success rounded-circle me-2">
+                                    <i class="bi bi-check"></i>
+                                </div>
+                                <span>User activity patterns</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-1 mb-2">
+                            <span class="badge bg-warning-subtle text-warning rounded-pill">Coming Soon</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-3">
+                    <button type="button" class="btn btn-warning w-100 fw-bold py-2" disabled>
+                        <i class="bi bi-graph-up-arrow me-2"></i> Coming Soon
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Settings Card -->
+    <div class="card mt-5 shadow-sm border-0 animate__animated animate__fadeIn animate__delay-5s">
+        <div class="card-header bg-light py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-gear me-2"></i> Report Settings & Features</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="bg-light rounded p-3 h-100">
+                        <div class="d-flex align-items-start">
+                            <div class="settings-icon rounded-circle bg-primary-subtle p-2 me-3">
+                                <i class="bi bi-filter text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2">Filter Data</h6>
+                                <p class="text-muted small mb-0">Refine reports with specific parameters to focus on relevant data. Set date ranges, categories, and more.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-light rounded p-3 h-100">
+                        <div class="d-flex align-items-start">
+                            <div class="settings-icon rounded-circle bg-success-subtle p-2 me-3">
+                                <i class="bi bi-printer text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2">Print Reports</h6>
+                                <p class="text-muted small mb-0">Generate printer-friendly versions of any report for physical records. Optimized layouts for readability.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-light rounded p-3 h-100">
+                        <div class="d-flex align-items-start">
+                            <div class="settings-icon rounded-circle bg-info-subtle p-2 me-3">
+                                <i class="bi bi-download text-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2">Export Data</h6>
+                                <p class="text-muted small mb-0">Save reports as PDF or CSV files for further analysis in spreadsheet applications (coming soon).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add custom styles for the reports page -->
+<style>
+    .report-icon {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    .report-icon-container {
+        top: 24px;
+        left: 24px;
+    }
+    
+    .feature-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+    
+    .settings-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .gradient-text {
+        background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+</style>
+
+<!-- Add custom JavaScript for report card animations -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const reportCards = document.querySelectorAll('.report-card');
+        
+        reportCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                const icon = this.querySelector('.report-icon');
+                icon.classList.add('animate__animated', 'animate__heartBeat');
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                const icon = this.querySelector('.report-icon');
+                icon.classList.remove('animate__animated', 'animate__heartBeat');
+            });
+        });
+    });
+</script>
+{% endblock %}

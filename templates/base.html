@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Science Laboratory Inventory Management System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if session.get('user_id') %}
+    <header class="mb-3">
+        <!-- Modern Compact Navbar -->
+        <nav class="navbar navbar-expand-lg sticky-top bg-white shadow-sm" id="main-navbar">
+            <div class="container px-3">
+                <!-- Brand Logo -->
+                <a class="navbar-brand d-flex align-items-center animate__animated animate__fadeIn" href="{{ url_for('dashboard') }}">
+                    <div class="brand-icon me-2">
+                        <i class="bi bi-flask-fill"></i>
+                    </div>
+                    <div>
+                        <span class="brand-text">SL</span><span class="brand-highlight">IMS</span>
+                    </div>
+                </a>
+                
+                <!-- Hamburger Button for Mobile -->
+                <button class="navbar-toggler border-0 rounded-pill bg-light px-3 py-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <i class="bi bi-list text-primary"></i>
+                </button>
+                
+                <!-- Navigation Items -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <!-- Dashboard -->
+                        <li class="nav-item px-1">
+                            <a class="nav-link rounded-pill px-3 my-1 {% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        
+                        <!-- Inventory -->
+                        <li class="nav-item px-1">
+                            <a class="nav-link rounded-pill px-3 my-1 {% if request.path == url_for('items') %}active{% endif %}" href="{{ url_for('items') }}">
+                                <i class="bi bi-box-seam me-1"></i> Inventory
+                            </a>
+                        </li>
+                        
+                        <!-- Transactions -->
+                        <li class="nav-item px-1">
+                            <a class="nav-link rounded-pill px-3 my-1 {% if request.path == url_for('transactions') %}active{% endif %}" href="{{ url_for('transactions') }}">
+                                <i class="bi bi-arrow-left-right me-1"></i> Transactions
+                            </a>
+                        </li>
+                        
+                        <!-- Recommendations -->
+                        <li class="nav-item px-1">
+                            <a class="nav-link rounded-pill px-3 my-1 {% if request.path == url_for('recommendations') %}active{% endif %}" href="{{ url_for('recommendations') }}">
+                                <i class="bi bi-lightbulb me-1"></i> Recommendations
+                            </a>
+                        </li>
+                        
+                        <!-- Management Features -->
+                        {% if session.get('role') in ['admin', 'lab_manager'] %}
+                        <li class="nav-item dropdown px-1">
+                            <a class="nav-link dropdown-toggle rounded-pill px-3 my-1 
+                                {% if request.path in [url_for('locations'), url_for('suppliers'), url_for('reports'), url_for('maintenance')] %}active{% endif %}" 
+                               href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-gear me-1"></i> Management
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-animated animate__animated animate__fadeIn animate__faster shadow-sm">
+                                <li><a class="dropdown-item {% if request.path == url_for('locations') %}active{% endif %}" href="{{ url_for('locations') }}">
+                                    <i class="bi bi-geo-alt-fill me-2"></i> Locations
+                                </a></li>
+                                <li><a class="dropdown-item {% if request.path == url_for('suppliers') %}active{% endif %}" href="{{ url_for('suppliers') }}">
+                                    <i class="bi bi-truck me-2"></i> Suppliers
+                                </a></li>
+                                <li><a class="dropdown-item {% if request.path == url_for('maintenance') %}active{% endif %}" href="{{ url_for('maintenance') }}">
+                                    <i class="bi bi-tools me-2"></i> <span class="d-inline-flex align-items-center">Equipment Maintenance <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;">AI</span></span>
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Reports</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reports') }}"><i class="bi bi-grid-1x2-fill me-2"></i> All Reports</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('inventory_status_report') }}"><i class="bi bi-bar-chart-fill me-2"></i> Inventory Status</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('transaction_history_report') }}"><i class="bi bi-clock-history me-2"></i> Transaction History</a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- Orders -->
+                        {% if session.get('role') in ['admin', 'lab_manager', 'researcher'] %}
+                        <li class="nav-item px-1">
+                            <a class="nav-link rounded-pill px-3 my-1 {% if request.path == url_for('orders') %}active{% endif %}" href="{{ url_for('orders') }}">
+                                <i class="bi bi-cart me-1"></i> Orders
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- Users (Admin only) -->
+                        {% if session.get('role') == 'admin' %}
+                        <li class="nav-item px-1">
+                            <a class="nav-link rounded-pill px-3 my-1 {% if request.path == url_for('users') %}active{% endif %}" href="{{ url_for('users') }}">
+                                <i class="bi bi-people me-1"></i> Users
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <!-- User Profile Menu -->
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center user-dropdown text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div class="d-none d-lg-block ms-2">
+                                    <div class="small fw-bold">{{ session.get('name', 'User') }}</div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge 
+                                            {% if session.get('role') == 'admin' %}bg-danger
+                                            {% elif session.get('role') == 'lab_manager' %}bg-primary
+                                            {% elif session.get('role') == 'researcher' %}bg-success
+                                            {% else %}bg-secondary{% endif %} me-1">
+                                            <i class="bi 
+                                                {% if session.get('role') == 'admin' %}bi-shield-lock-fill
+                                                {% elif session.get('role') == 'lab_manager' %}bi-clipboard-data-fill
+                                                {% elif session.get('role') == 'researcher' %}bi-eyeglasses
+                                                {% else %}bi-mortarboard-fill{% endif %} me-1"></i>
+                                            {{ session.get('role', '').replace('_', ' ').title() }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-animated animate__animated animate__fadeIn animate__faster shadow-sm">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        <i class="bi bi-person-circle me-2"></i> My Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('logout') }}">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    {% endif %}
+
+    <div class="container mt-4 mb-5 animate__animated animate__fadeIn">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show animate__animated animate__slideInDown">
+                        {% if category == 'success' %}
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                        {% elif category == 'danger' %}
+                            <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        {% elif category == 'warning' %}
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {% elif category == 'info' %}
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="bg-light py-3 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">&copy; 2025 Science Laboratory Inventory Management System</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Add sliding underline effect on hover for nav links
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('dropdown-toggle')) {
+                        this.classList.add('animate__animated', 'animate__pulse');
+                    }
+                });
+                
+                link.addEventListener('mouseleave', function() {
+                    this.classList.remove('animate__animated', 'animate__pulse');
+                });
+            });
+            
+            // Add hover effect to cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.classList.add('animate__animated', 'animate__pulse');
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.classList.remove('animate__animated', 'animate__pulse');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

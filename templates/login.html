@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Login - SciLabIMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center vh-100 align-items-center m-0">
+    <div class="col-lg-8">
+        <div class="card shadow border-0 overflow-hidden animate__animated animate__fadeIn">
+            <div class="row g-0">
+                <!-- Left side: Login form -->
+                <div class="col-md-6">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4 animate__animated animate__fadeInDown">
+                            <div class="d-inline-block position-relative mb-3">
+                                <i class="bi bi-flask-fill fs-1 text-primary"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success rounded-circle animate__animated animate__pulse animate__infinite">
+                                    <span class="visually-hidden">Lab Status</span>
+                                </span>
+                            </div>
+                            <h2 class="fw-bold">Welcome Back</h2>
+                            <p class="text-muted">Science Laboratory Inventory Management System</p>
+                        </div>
+                        
+                        <form method="post" action="{{ url_for('login') }}" class="staggered-list">
+                            <div class="mb-4">
+                                <label for="username" class="form-label">Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-person-fill"></i></span>
+                                    <input type="text" class="form-control" id="username" name="username" required 
+                                           placeholder="Enter your username" autocomplete="username">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-lock-fill"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password" required 
+                                           placeholder="Enter your password" autocomplete="current-password">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" tabindex="-1">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid mb-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-4 text-center animate__animated animate__fadeIn animate__delay-1s">
+                            <p>Don't have an account? <a href="{{ url_for('register') }}" class="fw-semibold">Register here</a></p>
+                            <p class="text-muted small"> --- </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right side: Laboratory illustration/image -->
+                <div class="col-md-6 d-none d-md-block">
+                    <div class="bg-primary h-100 p-5 text-white d-flex flex-column justify-content-center">
+                        <div class="animate__animated animate__fadeInRight">
+                            <h3 class="fw-bold mb-4">Streamline Your Laboratory Management</h3>
+                            <ul class="list-unstyled staggered-list">
+                                <li class="mb-3"><i class="bi bi-check-circle-fill me-2"></i> Track inventory in real-time</li>
+                                <li class="mb-3"><i class="bi bi-check-circle-fill me-2"></i> Manage chemical safety data</li>
+                                <li class="mb-3"><i class="bi bi-check-circle-fill me-2"></i> Monitor equipment usage</li>
+                                <li class="mb-3"><i class="bi bi-check-circle-fill me-2"></i> Generate comprehensive reports</li>
+                                <li class="mb-3"><i class="bi bi-check-circle-fill me-2"></i> Automate ordering processes</li>
+                            </ul>
+                            <div class="mt-5">
+                                <div class="d-flex align-items-center">
+                                    <div class="position-relative">
+                                        <i class="bi bi-shield-check fs-1 me-3"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Secure Access</h5>
+                                        <p class="mb-0">Role-based permissions for all laboratory personnel</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentNode.querySelector('input');
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+                
+                // Add animation to the button
+                this.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => {
+                    this.classList.remove('animate__animated', 'animate__pulse');
+                }, 500);
+            });
+        });
+        
+        // Add animation to form inputs when focused
+        const formInputs = document.querySelectorAll('.form-control');
+        formInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentNode.classList.add('animate__animated', 'animate__pulse');
+                this.parentNode.style.boxShadow = '0 0 0 0.25rem rgba(74, 111, 255, 0.25)';
+                this.parentNode.style.borderColor = 'var(--primary-color)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentNode.classList.remove('animate__animated', 'animate__pulse');
+                this.parentNode.style.boxShadow = '';
+                if (!this.value) {
+                    this.parentNode.style.borderColor = '';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

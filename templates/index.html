@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center g-5 py-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold lh-1 mb-3">Science Laboratory Inventory Management System</h1>
+        <p class="lead">A comprehensive solution designed specifically for educational and research laboratories to efficiently manage inventory, track usage, ensure safety compliance, and streamline operations.</p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-4 me-md-2">Log In</a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline-secondary btn-lg px-4">Register</a>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-lg">
+            <div class="card-body p-5">
+                <h2 class="card-title mb-4">Key Features</h2>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-check2-circle text-primary fs-4 me-3"></i>
+                    <div>
+                        <h5 class="mb-0">Inventory Tracking</h5>
+                        <p class="text-muted mb-0">Track chemicals, equipment, and supplies with detailed information</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-qr-code-scan text-primary fs-4 me-3"></i>
+                    <div>
+                        <h5 class="mb-0">Barcode Integration</h5>
+                        <p class="text-muted mb-0">Quickly check items in and out with barcode functionality</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-people text-primary fs-4 me-3"></i>
+                    <div>
+                        <h5 class="mb-0">Multi-level Access</h5>
+                        <p class="text-muted mb-0">Role-based permissions for administrators, lab managers, and researchers</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-bar-chart text-primary fs-4 me-3"></i>
+                    <div>
+                        <h5 class="mb-0">Analytics & Reports</h5>
+                        <p class="text-muted mb-0">Generate comprehensive reports to make informed decisions</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle text-primary fs-4 me-3"></i>
+                    <div>
+                        <h5 class="mb-0">Safety Compliance</h5>
+                        <p class="text-muted mb-0">Maintain safety documentation and hazard information</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5">
+
+<div class="row g-4 py-5">
+    <div class="col-12 text-center mb-4">
+        <h2>Benefits of Using SLIMS</h2>
+        <p class="lead">Our system is designed to improve efficiency and safety in laboratory environments</p>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="text-bg-primary p-3 rounded-circle">
+                        <i class="bi bi-clock fs-3"></i>
+                    </div>
+                </div>
+                <h3 class="card-title text-center">Save Time & Resources</h3>
+                <p class="card-text">Automate inventory management tasks to free up valuable time for research and teaching activities.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="text-bg-success p-3 rounded-circle">
+                        <i class="bi bi-shield-check fs-3"></i>
+                    </div>
+                </div>
+                <h3 class="card-title text-center">Enhance Safety</h3>
+                <p class="card-text">Ensure compliance with safety regulations by maintaining up-to-date documentation and hazard information.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="text-bg-warning p-3 rounded-circle">
+                        <i class="bi bi-cash-coin fs-3"></i>
+                    </div>
+                </div>
+                <h3 class="card-title text-center">Reduce Costs</h3>
+                <p class="card-text">Optimize purchasing by tracking usage patterns, identifying waste, and preventing unnecessary orders.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-light p-5 rounded-3 my-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold">Ready to Transform Your Laboratory?</h2>
+                <p class="lead">Sign up now to start managing your laboratory inventory with ease.</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

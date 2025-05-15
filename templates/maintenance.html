@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}Equipment Maintenance Predictions{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0">AI Equipment Maintenance Prediction</h1>
+        <div>
+            <a href="{{ url_for('maintenance', refresh=true) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh Predictions
+            </a>
+            <a href="#addMaintenanceModal" data-bs-toggle="modal" class="btn btn-sm btn-primary ms-2">
+                <i class="bi bi-plus-lg me-1"></i> Log Maintenance
+            </a>
+            <a href="#logUsageModal" data-bs-toggle="modal" class="btn btn-sm btn-secondary ms-2">
+                <i class="bi bi-clock-history me-1"></i> Log Usage
+            </a>
+        </div>
+    </div>
+
+    {% if session.role in ['admin', 'lab_manager'] %}
+    <div class="alert alert-info" role="alert">
+        <h4 class="alert-heading"><i class="bi bi-info-circle me-2"></i>About This Feature</h4>
+        <p>This AI-powered system analyzes equipment usage patterns and maintenance history to predict when equipment will likely need maintenance. It considers:</p>
+        <ul>
+            <li>Equipment usage history and intensity</li>
+            <li>Previous maintenance intervals</li>
+            <li>Patterns in recurring issues</li>
+            <li>Calibration and repair frequency</li>
+        </ul>
+        <p class="mb-0">By logging maintenance and usage data regularly, you'll improve the accuracy of these predictions over time.</p>
+    </div>
+    {% endif %}
+
+    <!-- Maintenance Dashboard Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Equipment Items</h5>
+                    <h2 class="display-5">{{ equipment|length }}</h2>
+                    <p class="card-text">Total equipment items</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Maintenance Records</h5>
+                    <h2 class="display-5">{{ maintenance_history|length }}</h2>
+                    <p class="card-text">Total maintenance records</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Predictions</h5>
+                    <h2 class="display-5">{{ predictions|length }}</h2>
+                    <p class="card-text">Active maintenance predictions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card {% if critical_count > 0 %}bg-danger{% else %}bg-secondary{% endif %} text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Critical Issues</h5>
+                    <h2 class="display-5">{{ critical_count }}</h2>
+                    <p class="card-text">Critical maintenance needed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Predictions Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Predicted Maintenance Schedule</h4>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Equipment</th>
+                            <th>Predicted Date</th>
+                            <th>Type</th>
+                            <th>Urgency</th>
+                            <th>Confidence</th>
+                            <th>Predicted Issue</th>
+                            <th>Days Until</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if predictions %}
+                            {% for prediction in predictions %}
+                                <tr class="{% if prediction.is_critical %}table-danger{% elif prediction.days_until_maintenance <= 7 %}table-warning{% endif %}">
+                                    <td><strong>{{ prediction.equipment_name }}</strong></td>
+                                    <td>{{ prediction.prediction_date }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if prediction.maintenance_type == 'repair' %}danger{% elif prediction.maintenance_type == 'calibration' %}info{% else %}success{% endif %}">
+                                            {{ prediction.maintenance_type|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if prediction.is_critical %}
+                                            <span class="badge bg-danger">Critical</span>
+                                        {% elif prediction.days_until_maintenance <= 7 %}
+                                            <span class="badge bg-warning text-dark">Soon</span>
+                                        {% elif prediction.days_until_maintenance <= 30 %}
+                                            <span class="badge bg-primary">Upcoming</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Planned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar 
+                                                {% if prediction.confidence_score >= 0.8 %}bg-success
+                                                {% elif prediction.confidence_score >= 0.6 %}bg-primary
+                                                {% else %}bg-secondary{% endif %}" 
+                                                role="progressbar" 
+                                                style="width: {{ prediction.confidence_score * 100 }}%;" 
+                                                aria-valuenow="{{ prediction.confidence_score * 100 }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                                {{ (prediction.confidence_score * 100)|int }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ prediction.predicted_issue or 'None predicted' }}</td>
+                                    <td>
+                                        {% if prediction.days_until_maintenance < 0 %}
+                                            <span class="text-danger">Overdue</span>
+                                        {% else %}
+                                            {{ prediction.days_until_maintenance }} days
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <p class="text-muted mb-0">No maintenance predictions yet. Add equipment usage and maintenance data to generate predictions.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Maintenance History Section -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Recent Maintenance History</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Equipment</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Technician</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if maintenance_history %}
+                                    {% for record in maintenance_history %}
+                                        <tr>
+                                            <td>{{ record.maintenance_date }}</td>
+                                            <td>{{ record.equipment_name }}</td>
+                                            <td>{{ record.maintenance_type|title }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if record.status == 'completed' %}success{% elif record.status == 'scheduled' %}primary{% elif record.status == 'postponed' %}warning{% else %}secondary{% endif %}">
+                                                    {{ record.status|title }}
+                                                </span>
+                                            </td>
+                                            <td>{{ record.technician or 'Not specified' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">
+                                            <p class="text-muted mb-0">No maintenance records yet.</p>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment List Section -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Equipment Inventory</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Equipment Name</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if equipment %}
+                                    {% for item in equipment %}
+                                        <tr>
+                                            <td>{{ item.name }}</td>
+                                            <td>{{ item.location_name or 'Not assigned' }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if item.status == 'in_stock' %}success{% elif item.status == 'low_stock' %}warning{% else %}danger{% endif %}">
+                                                    {{ item.status|replace('_', ' ')|title }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="#" class="btn btn-outline-primary log-usage-btn" 
+                                                       data-equipment-id="{{ item.id }}" 
+                                                       data-equipment-name="{{ item.name }}">
+                                                        <i class="bi bi-clock-history"></i>
+                                                    </a>
+                                                    <a href="#" class="btn btn-outline-success log-maintenance-btn" 
+                                                       data-equipment-id="{{ item.id }}" 
+                                                       data-equipment-name="{{ item.name }}">
+                                                        <i class="bi bi-tools"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3">
+                                            <p class="text-muted mb-0">No equipment items found.</p>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Maintenance Modal -->
+<div class="modal fade" id="addMaintenanceModal" tabindex="-1" aria-labelledby="addMaintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addMaintenanceModalLabel">Log Equipment Maintenance</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('log_maintenance') }}" method="post">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="equipment_id" class="form-label">Equipment</label>
+                            <select class="form-select" id="equipment_id" name="equipment_id" required>
+                                <option value="">Select Equipment</option>
+                                {% for item in equipment %}
+                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="maintenance_date" class="form-label">Maintenance Date</label>
+                            <input type="date" class="form-control" id="maintenance_date" name="maintenance_date" value="{{ now|default(None, true) }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="maintenance_type" class="form-label">Maintenance Type</label>
+                            <select class="form-select" id="maintenance_type" name="maintenance_type" required>
+                                <option value="routine">Routine</option>
+                                <option value="repair">Repair</option>
+                                <option value="calibration">Calibration</option>
+                                <option value="inspection">Inspection</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="completed" selected>Completed</option>
+                                <option value="postponed">Postponed</option>
+                                <option value="canceled">Canceled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="technician" class="form-label">Technician</label>
+                            <input type="text" class="form-control" id="technician" name="technician">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hours_used_before" class="form-label">Hours Used Before Maintenance</label>
+                            <input type="number" class="form-control" id="hours_used_before" name="hours_used_before" min="0">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="issue_detected" class="form-label">Issue Detected</label>
+                            <input type="text" class="form-control" id="issue_detected" name="issue_detected">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cost" class="form-label">Cost ($)</label>
+                            <input type="number" class="form-control" id="cost" name="cost" min="0" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="parts_replaced" class="form-label">Parts Replaced</label>
+                        <input type="text" class="form-control" id="parts_replaced" name="parts_replaced">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Maintenance Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Log Usage Modal -->
+<div class="modal fade" id="logUsageModal" tabindex="-1" aria-labelledby="logUsageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="logUsageModalLabel">Log Equipment Usage</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('log_equipment_usage') }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="usage_equipment_id" class="form-label">Equipment</label>
+                        <select class="form-select" id="usage_equipment_id" name="equipment_id" required>
+                            <option value="">Select Equipment</option>
+                            {% for item in equipment %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="start_time" class="form-label">Start Time</label>
+                            <input type="datetime-local" class="form-control" id="start_time" name="start_time" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_time" class="form-label">End Time (Optional)</label>
+                            <input type="datetime-local" class="form-control" id="end_time" name="end_time">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="duration" class="form-label">Duration in Hours (If known)</label>
+                        <input type="number" class="form-control" id="duration" name="duration" min="0" step="0.5">
+                        <small class="form-text text-muted">If end time is provided, duration will be calculated automatically.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="project" class="form-label">Project</label>
+                        <input type="text" class="form-control" id="project" name="project">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="usage_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="usage_notes" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Usage</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize current date for the maintenance date field
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('maintenance_date').value = today;
+    
+    // Set default start time to now
+    const now = new Date();
+    const nowString = now.toISOString().slice(0, 16);
+    document.getElementById('start_time').value = nowString;
+    
+    // Quick log usage buttons
+    document.querySelectorAll('.log-usage-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const equipmentId = this.getAttribute('data-equipment-id');
+            const equipmentName = this.getAttribute('data-equipment-name');
+            document.getElementById('usage_equipment_id').value = equipmentId;
+            document.getElementById('logUsageModalLabel').textContent = `Log Usage: ${equipmentName}`;
+            
+            // Show the modal
+            const logUsageModal = new bootstrap.Modal(document.getElementById('logUsageModal'));
+            logUsageModal.show();
+        });
+    });
+    
+    // Quick log maintenance buttons
+    document.querySelectorAll('.log-maintenance-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const equipmentId = this.getAttribute('data-equipment-id');
+            const equipmentName = this.getAttribute('data-equipment-name');
+            document.getElementById('equipment_id').value = equipmentId;
+            document.getElementById('addMaintenanceModalLabel').textContent = `Log Maintenance: ${equipmentName}`;
+            
+            // Show the modal
+            const addMaintenanceModal = new bootstrap.Modal(document.getElementById('addMaintenanceModal'));
+            addMaintenanceModal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,287 @@
+<div class="mb-3 p-3 animate__animated animate__fadeIn">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="input-group">
+            <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="searchItems" placeholder="Search items by name, category, location...">
+        </div>
+        <div>
+            <span id="search-counter" class="badge bg-primary ms-2" style="display:none;">0 items found</span>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end">
+        <div class="form-text text-end">
+            <i class="bi bi-info-circle me-1"></i> Type to filter items
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover items-table">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Quantity</th>
+                <th>Min Qty</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody class="staggered-list">
+            {% set item_list = filtered_items if filtered_items is defined else items %}
+            {% if item_list and item_list|length > 0 %}
+                {% for item in item_list %}
+                <tr class="animate-on-scroll" data-animation="fadeIn">
+                    <td>
+                        <strong>{{ item.name }}</strong>
+                        {% if item.barcode %}
+                        <br><small class="text-muted"><i class="bi bi-upc-scan me-1"></i>{{ item.barcode }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.category == 'chemicals' %}
+                        <span class="badge bg-info bg-opacity-75"><i class="bi bi-droplet-fill me-1"></i>{{ item.category|capitalize }}</span>
+                        {% elif item.category == 'equipment' %}
+                        <span class="badge bg-primary bg-opacity-75"><i class="bi bi-tools me-1"></i>{{ item.category|capitalize }}</span>
+                        {% elif item.category == 'consumables' %}
+                        <span class="badge bg-success bg-opacity-75"><i class="bi bi-basket-fill me-1"></i>{{ item.category|capitalize }}</span>
+                        {% elif item.category == 'glassware' %}
+                        <span class="badge bg-secondary bg-opacity-75"><i class="bi bi-cup-fill me-1"></i>{{ item.category|capitalize }}</span>
+                        {% else %}
+                        <span class="badge bg-dark bg-opacity-75">{{ item.category|capitalize }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.location_name %}
+                        <i class="bi bi-geo-alt-fill me-1 text-primary"></i>{{ item.location_name }}
+                        {% else %}
+                        <span class="text-muted">Not assigned</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.quantity }} {{ item.unit }}</td>
+                    <td>{{ item.min_quantity }} {{ item.unit }}</td>
+                    <td>
+                        {% if item.status == 'in_stock' %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle-fill me-1"></i>In Stock
+                        </span>
+                        {% elif item.status == 'low_stock' %}
+                        <span class="badge bg-warning animate__animated animate__pulse animate__infinite">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>Low Stock
+                        </span>
+                        {% elif item.status == 'out_of_stock' %}
+                        <span class="badge bg-danger">
+                            <i class="bi bi-x-circle-fill me-1"></i>Out of Stock
+                        </span>
+                        {% elif item.status == 'expiring_soon' %}
+                        <span class="badge bg-info">
+                            <i class="bi bi-clock-fill me-1"></i>Expiring Soon
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('view_item', item_id=item.id) }}" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="View details">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                            <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Edit item">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteItemModal{{ item.id }}" data-bs-toggle="tooltip" title="Delete item">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- View Item Modal -->
+                        <div class="modal fade" id="viewItemModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">{{ item.name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6>Basic Information</h6>
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">Category</dt>
+                                                    <dd class="col-sm-8">{{ item.category|capitalize }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Description</dt>
+                                                    <dd class="col-sm-8">{{ item.description or 'N/A' }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Barcode</dt>
+                                                    <dd class="col-sm-8">{{ item.barcode or 'N/A' }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Status</dt>
+                                                    <dd class="col-sm-8">
+                                                        {% if item.status == 'in_stock' %}
+                                                        <span class="badge bg-success">In Stock</span>
+                                                        {% elif item.status == 'low_stock' %}
+                                                        <span class="badge bg-warning">Low Stock</span>
+                                                        {% elif item.status == 'out_of_stock' %}
+                                                        <span class="badge bg-danger">Out of Stock</span>
+                                                        {% elif item.status == 'expiring_soon' %}
+                                                        <span class="badge bg-info">Expiring Soon</span>
+                                                        {% endif %}
+                                                    </dd>
+                                                </dl>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Inventory Details</h6>
+                                                <dl class="row">
+                                                    <dt class="col-sm-5">Current Quantity</dt>
+                                                    <dd class="col-sm-7">{{ item.quantity }} {{ item.unit }}</dd>
+                                                    
+                                                    <dt class="col-sm-5">Minimum Quantity</dt>
+                                                    <dd class="col-sm-7">{{ item.min_quantity or '0' }} {{ item.unit }}</dd>
+                                                    
+                                                    <dt class="col-sm-5">Location</dt>
+                                                    <dd class="col-sm-7">{{ item.location_name or 'N/A' }}</dd>
+                                                    
+                                                    <dt class="col-sm-5">Supplier</dt>
+                                                    <dd class="col-sm-7">{{ item.supplier_name or 'N/A' }}</dd>
+                                                    
+                                                    <dt class="col-sm-5">Price</dt>
+                                                    <dd class="col-sm-7">{{ '$%.2f'|format(item.price) if item.price else 'N/A' }}</dd>
+                                                </dl>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6>Safety Information</h6>
+                                                <dl class="row">
+                                                    <dt class="col-sm-5">Hazard Type</dt>
+                                                    <dd class="col-sm-7">
+                                                        {% if item.hazard_type %}
+                                                            {% if item.hazard_type == 'flammable' %}
+                                                                <span class="badge bg-danger">
+                                                                    <i class="bi bi-fire"></i> Flammable
+                                                                </span>
+                                                            {% elif item.hazard_type == 'corrosive' %}
+                                                                <span class="badge bg-warning">
+                                                                    <i class="bi bi-droplet"></i> Corrosive
+                                                                </span>
+                                                            {% elif item.hazard_type == 'toxic' %}
+                                                                <span class="badge bg-dark">
+                                                                    <i class="bi bi-exclamation-diamond"></i> Toxic
+                                                                </span>
+                                                            {% elif item.hazard_type == 'oxidizing' %}
+                                                                <span class="badge bg-primary">
+                                                                    <i class="bi bi-circle"></i> Oxidizing
+                                                                </span>
+                                                            {% elif item.hazard_type == 'explosive' %}
+                                                                <span class="badge bg-danger">
+                                                                    <i class="bi bi-exclamation-octagon"></i> Explosive
+                                                                </span>
+                                                            {% elif item.hazard_type == 'harmful' %}
+                                                                <span class="badge bg-warning text-dark">
+                                                                    <i class="bi bi-exclamation-triangle"></i> Harmful
+                                                                </span>
+                                                            {% elif item.hazard_type == 'irritant' %}
+                                                                <span class="badge bg-warning text-dark">
+                                                                    <i class="bi bi-exclamation"></i> Irritant
+                                                                </span>
+                                                            {% elif item.hazard_type == 'environmental' %}
+                                                                <span class="badge bg-success">
+                                                                    <i class="bi bi-tree"></i> Environmental Hazard
+                                                                </span>
+                                                            {% endif %}
+                                                        {% else %}
+                                                            None
+                                                        {% endif %}
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-5">Storage Condition</dt>
+                                                    <dd class="col-sm-7">
+                                                        {% if item.storage_condition %}
+                                                            {% if item.storage_condition == 'room_temperature' %}
+                                                                <i class="bi bi-thermometer-half"></i> Room Temperature
+                                                            {% elif item.storage_condition == 'refrigerated' %}
+                                                                <i class="bi bi-thermometer-snow"></i> Refrigerated
+                                                            {% elif item.storage_condition == 'frozen' %}
+                                                                <i class="bi bi-snow"></i> Frozen
+                                                            {% elif item.storage_condition == 'dry' %}
+                                                                <i class="bi bi-moisture"></i> Dry
+                                                            {% elif item.storage_condition == 'dark' %}
+                                                                <i class="bi bi-moon"></i> Dark
+                                                            {% elif item.storage_condition == 'ventilated' %}
+                                                                <i class="bi bi-wind"></i> Ventilated
+                                                            {% endif %}
+                                                        {% else %}
+                                                            None
+                                                        {% endif %}
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-5">MSDS URL</dt>
+                                                    <dd class="col-sm-7">
+                                                        {% if item.msds_url %}
+                                                            <a href="{{ item.msds_url }}" target="_blank">View MSDS <i class="bi bi-box-arrow-up-right"></i></a>
+                                                        {% else %}
+                                                            N/A
+                                                        {% endif %}
+                                                    </dd>
+                                                </dl>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Additional Information</h6>
+                                                <dl class="row">
+                                                    <dt class="col-sm-5">Expiry Date</dt>
+                                                    <dd class="col-sm-7">{{ item.expiry_date or 'N/A' }}</dd>
+                                                    
+                                                    <dt class="col-sm-5">Created At</dt>
+                                                    <dd class="col-sm-7">{{ item.created_at.split(' ')[0] }}</dd>
+                                                    
+                                                    <dt class="col-sm-5">Last Updated</dt>
+                                                    <dd class="col-sm-7">{{ item.updated_at.split(' ')[0] }}</dd>
+                                                </dl>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-primary">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete Item Modal -->
+                        <div class="modal fade" id="deleteItemModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Delete</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete <strong>{{ item.name }}</strong>?</p>
+                                        <p class="text-danger">This action cannot be undone. All transaction records for this item will also be deleted.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form action="{{ url_for('delete_item', item_id=item.id) }}" method="post">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-3">No items found in this category.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>

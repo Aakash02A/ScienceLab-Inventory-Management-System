@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Register - SciLabIMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card shadow border-0 overflow-hidden animate__animated animate__fadeIn">
+            <div class="card-header bg-primary text-white p-4">
+                <div class="d-flex align-items-center">
+                    <div class="animate__animated animate__fadeInLeft">
+                        <i class="bi bi-person-plus-fill fs-1 me-3"></i>
+                    </div>
+                    <div class="animate__animated animate__fadeInRight">
+                        <h2 class="mb-1 fw-bold">Create Your Account</h2>
+                        <p class="mb-0">Join the Science Laboratory Inventory Management System</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form method="post" action="{{ url_for('register') }}">
+                            <div class="row staggered-list">
+                                <div class="col-md-6 mb-3">
+                                    <label for="username" class="form-label">Username *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-person-fill"></i></span>
+                                        <input type="text" class="form-control" id="username" name="username" required
+                                               placeholder="Choose a username" autocomplete="username">
+                                        <div class="feedback-icon"></div>
+                                    </div>
+                                    <div class="form-text"><i class="bi bi-info-circle me-1"></i> Will be used to login</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">Full Name *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-person-badge-fill"></i></span>
+                                        <input type="text" class="form-control" id="name" name="name" required
+                                               placeholder="Enter your full name">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row staggered-list">
+                                <div class="col-md-6 mb-3">
+                                    <label for="password" class="form-label">Password *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-lock-fill"></i></span>
+                                        <input type="password" class="form-control" id="password" name="password" required
+                                               placeholder="Create a password" autocomplete="new-password">
+                                        <button class="btn btn-outline-secondary toggle-password" type="button" tabindex="-1"
+                                                data-bs-toggle="tooltip" title="Show/hide password">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text"><i class="bi bi-shield-lock me-1"></i> Use at least 6 characters</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-envelope-fill"></i></span>
+                                        <input type="email" class="form-control" id="email" name="email"
+                                               placeholder="Enter your email (optional)">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row staggered-list">
+                                <div class="col-md-6 mb-3">
+                                    <label for="role" class="form-label">Role *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-shield-fill"></i></span>
+                                        <select class="form-select" id="role" name="role" required>
+                                            <option value="" selected disabled>Select your role</option>
+                                            <option value="student">Student</option>
+                                            <option value="researcher">Researcher</option>
+                                            <option value="lab_manager">Lab Manager</option>
+                                            <option value="admin">Administrator</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-text"><i class="bi bi-key me-1"></i> Determines your access permissions</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="department" class="form-label">Department</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-building-fill"></i></span>
+                                        <input type="text" class="form-control" id="department" name="department"
+                                               placeholder="Your department (optional)">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-4 animate__animated animate__fadeInUp animate__delay-1s">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-person-plus-fill me-2"></i>Create Account
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="alert alert-info animate__animated animate__fadeIn animate__delay-1s">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-info-circle-fill fs-4"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Access Approval Required</h5>
+                                    <p class="mb-0">All new accounts require approval from a laboratory administrator before full access is granted.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center animate__animated animate__fadeIn animate__delay-2s">
+                    <p>Already have an account? <a href="{{ url_for('login') }}" class="fw-semibold">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentNode.querySelector('input');
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+                
+                // Add animation to the button
+                this.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => {
+                    this.classList.remove('animate__animated', 'animate__pulse');
+                }, 500);
+            });
+        });
+        
+        // Role select animation
+        const roleSelect = document.getElementById('role');
+        if (roleSelect) {
+            roleSelect.addEventListener('change', function() {
+                const selectedRole = this.value;
+                const iconMap = {
+                    'student': 'bi-mortarboard-fill',
+                    'researcher': 'bi-microscope',
+                    'lab_manager': 'bi-clipboard2-data-fill',
+                    'admin': 'bi-gear-fill'
+                };
+                
+                if (iconMap[selectedRole]) {
+                    const icon = this.parentNode.querySelector('.input-group-text i');
+                    icon.className = '';
+                    icon.classList.add('bi', iconMap[selectedRole]);
+                    
+                    // Add animation
+                    icon.classList.add('animate__animated', 'animate__bounceIn');
+                    setTimeout(() => {
+                        icon.classList.remove('animate__animated', 'animate__bounceIn');
+                    }, 1000);
+                }
+            });
+        }
+        
+        // Add animation to form inputs when focused
+        const formInputs = document.querySelectorAll('.form-control, .form-select');
+        formInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentNode.classList.add('animate__animated', 'animate__pulse');
+                this.parentNode.style.boxShadow = '0 0 0 0.25rem rgba(74, 111, 255, 0.25)';
+                this.parentNode.style.borderColor = 'var(--primary-color)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentNode.classList.remove('animate__animated', 'animate__pulse');
+                this.parentNode.style.boxShadow = '';
+                if (!this.value) {
+                    this.parentNode.style.borderColor = '';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

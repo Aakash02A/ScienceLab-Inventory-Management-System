@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - SLIMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-arrow-left-right"></i> Transactions</h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+        <i class="bi bi-plus-lg"></i> Record Transaction
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="transactionTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="true">All Transactions</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="check-in-tab" data-bs-toggle="tab" data-bs-target="#check-in" type="button" role="tab" aria-controls="check-in" aria-selected="false">Check In</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="check-out-tab" data-bs-toggle="tab" data-bs-target="#check-out" type="button" role="tab" aria-controls="check-out" aria-selected="false">Check Out</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="restock-tab" data-bs-toggle="tab" data-bs-target="#restock" type="button" role="tab" aria-controls="restock" aria-selected="false">Restock</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="dispose-tab" data-bs-toggle="tab" data-bs-target="#dispose" type="button" role="tab" aria-controls="dispose" aria-selected="false">Dispose</button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-0">
+        <div class="tab-content" id="transactionTabContent">
+            <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                {% include 'partials/transactions_table.html' with context %}
+            </div>
+            <div class="tab-pane fade" id="check-in" role="tabpanel" aria-labelledby="check-in-tab">
+                {% with filtered_transactions = transactions|selectattr("type", "equalto", "check_in")|list %}
+                    {% include 'partials/transactions_table.html' with context %}
+                {% endwith %}
+            </div>
+            <div class="tab-pane fade" id="check-out" role="tabpanel" aria-labelledby="check-out-tab">
+                {% with filtered_transactions = transactions|selectattr("type", "equalto", "check_out")|list %}
+                    {% include 'partials/transactions_table.html' with context %}
+                {% endwith %}
+            </div>
+            <div class="tab-pane fade" id="restock" role="tabpanel" aria-labelledby="restock-tab">
+                {% with filtered_transactions = transactions|selectattr("type", "equalto", "restock")|list %}
+                    {% include 'partials/transactions_table.html' with context %}
+                {% endwith %}
+            </div>
+            <div class="tab-pane fade" id="dispose" role="tabpanel" aria-labelledby="dispose-tab">
+                {% with filtered_transactions = transactions|selectattr("type", "equalto", "dispose")|list %}
+                    {% include 'partials/transactions_table.html' with context %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTransactionModalLabel"><i class="bi bi-plus-lg"></i> Record Transaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_transaction') }}" method="post" id="addTransactionForm">
+                    <div class="mb-3">
+                        <label for="item_id" class="form-label">Item *</label>
+                        <select class="form-select" id="item_id" name="item_id" required>
+                            <option value="" selected disabled>Select an item</option>
+                            {% for item in items %}
+                            <option value="{{ item.id }}" data-unit="{{ item.unit }}">{{ item.name }} ({{ item.quantity }} {{ item.unit }} available)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Transaction Type *</label>
+                        <select class="form-select" id="type" name="type" required>
+                            <option value="" selected disabled>Select transaction type</option>
+                            <option value="check_in">Check In</option>
+                            <option value="check_out">Check Out</option>
+                            <option value="restock">Restock</option>
+                            <option value="dispose">Dispose</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity *</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="quantity" name="quantity" step="0.01" min="0.01" required>
+                            <span class="input-group-text" id="selectedUnit">units</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addTransactionForm" class="btn btn-primary">Record Transaction</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update unit when item is selected
+        const itemSelect = document.getElementById('item_id');
+        const unitSpan = document.getElementById('selectedUnit');
+        
+        if (itemSelect && unitSpan) {
+            itemSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption) {
+                    unitSpan.textContent = selectedOption.dataset.unit || 'units';
+                }
+            });
+        }
+        
+        // Initialize search functionality
+        const searchInput = document.getElementById('searchTransactions');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                const tableRows = document.querySelectorAll('.transactions-table tbody tr');
+                
+                tableRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

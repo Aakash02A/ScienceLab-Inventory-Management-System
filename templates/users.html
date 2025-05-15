@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Users - SLIMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-people"></i> Users</h1>
+    <a href="{{ url_for('register') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Add User
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if users %}
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.email or '-' }}</td>
+                            <td>
+                                {% if user.role == 'admin' %}
+                                <span class="badge bg-danger">Administrator</span>
+                                {% elif user.role == 'lab_manager' %}
+                                <span class="badge bg-primary">Lab Manager</span>
+                                {% elif user.role == 'researcher' %}
+                                <span class="badge bg-success">Researcher</span>
+                                {% elif user.role == 'student' %}
+                                <span class="badge bg-info">Student</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.department or '-' }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.id }}">
+                                        <i class="bi bi-key"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Reset Password Modal -->
+                                <div class="modal fade" id="resetPasswordModal{{ user.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Reset Password</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to reset the password for <strong>{{ user.username }}</strong>?</p>
+                                                
+                                                <form action="{{ url_for('reset_password', user_id=user.id) }}" method="post" id="resetPasswordForm{{ user.id }}" onsubmit="submitPasswordReset(event, {{ user.id }})">
+                                                    <div class="mb-3">
+                                                        <label for="new_password{{ user.id }}" class="form-label">New Password</label>
+                                                        <input type="password" class="form-control" id="new_password{{ user.id }}" name="new_password" required>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-warning">Reset Password</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Delete User Modal -->
+                                <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirm Delete</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete user <strong>{{ user.username }}</strong>?</p>
+                                                {% if user.id == session.get('user_id') %}
+                                                <div class="alert alert-danger">
+                                                    <i class="bi bi-exclamation-triangle-fill"></i> You cannot delete your own account.
+                                                </div>
+                                                {% else %}
+                                                <div class="alert alert-warning">
+                                                    <i class="bi bi-exclamation-triangle"></i> This will permanently delete the user and may affect history records. Users with transaction or order records cannot be deleted.
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('delete_user', user_id=user.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger" {% if user.id == session.get('user_id') %}disabled{% endif %}>Delete User</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <p class="mb-0">No users found. <a href="{{ url_for('register') }}" class="btn btn-sm btn-primary">Add a user</a></p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Custom JavaScript for this page -->
+<script>
+function submitPasswordReset(event, userId) {
+    event.preventDefault();
+    
+    const form = document.getElementById('resetPasswordForm' + userId);
+    const formData = new FormData(form);
+    const passwordInput = document.getElementById('new_password' + userId);
+    const modal = document.getElementById('resetPasswordModal' + userId);
+    
+    // Safely get the modal instance or create one if needed
+    let modalInstance;
+    try {
+        modalInstance = bootstrap.Modal.getInstance(modal);
+        if (!modalInstance) {
+            modalInstance = new bootstrap.Modal(modal);
+        }
+    } catch (error) {
+        console.warn("Could not get modal instance:", error);
+    }
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        return response.json().catch(() => {
+            // If the response isn't JSON, handle it as a regular response
+            return { success: response.ok, message: response.ok ? 'Password reset successfully!' : 'Failed to reset password' };
+        });
+    })
+    .then(data => {
+        if (data.success) {
+            // Show a success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <strong>Success!</strong> ${data.message || 'Password has been reset.'}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.querySelector('.d-flex.justify-content-between').after(alertDiv);
+            
+            // Clear the password field and close the modal safely
+            passwordInput.value = '';
+            
+            try {
+                // Try to close the modal using Bootstrap API
+                if (modalInstance) {
+                    modalInstance.hide();
+                } else {
+                    // Fallback to basic DOM manipulation if Bootstrap modal API not available
+                    modal.classList.remove('show');
+                    modal.style.display = 'none';
+                    
+                    // Remove modal backdrop if present
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) backdrop.remove();
+                    
+                    // Remove the modal-open class from body
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+                }
+            } catch (error) {
+                console.warn("Error closing modal:", error);
+                // If all else fails, reload the page after a brief delay
+                setTimeout(() => window.location.reload(), 1000);
+            }
+            
+            // Auto-dismiss the alert after 3 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        } else {
+            // Show an error message
+            alert(data.message || 'Failed to reset password. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while resetting the password.');
+    });
+}
+</script>
+{% endblock %}

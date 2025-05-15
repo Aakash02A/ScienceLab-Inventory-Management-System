@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Location - SciLabIMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid animate__animated animate__fadeIn">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold">
+                        <i class="bi bi-pencil-square text-success me-2"></i> 
+                        <span class="gradient-text">Edit Location</span>
+                    </h1>
+                    <p class="text-muted">Update storage location details</p>
+                </div>
+                <a href="{{ url_for('locations') }}" class="btn btn-outline-secondary animate__animated animate__fadeIn">
+                    <i class="bi bi-arrow-left me-2"></i> Back to Locations
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="location-icon rounded-circle bg-white text-success p-2 me-3">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <h5 class="mb-0">{{ location.name }}</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Location statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon rounded-circle bg-success-subtle me-3">
+                                        <i class="bi bi-boxes text-success"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Items Stored</div>
+                                        <div class="fw-bold">{{ location.item_count }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="stat-icon rounded-circle bg-primary-subtle me-3">
+                                        <i class="bi bi-calendar-check text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Created On</div>
+                                        <div class="fw-bold">{{ location.created_at.split(' ')[0] }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <form action="{{ url_for('edit_location', location_id=location.id) }}" method="post" id="editLocationForm" class="staggered-form">
+                        <div class="mb-4 animate__animated animate__fadeIn animate__delay-1s">
+                            <label for="name" class="form-label">Location Name *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-tag"></i></span>
+                                <input type="text" class="form-control" id="name" name="name" required value="{{ location.name }}">
+                            </div>
+                            <div class="form-text">Required field - e.g., "Lab Room 101", "Cold Storage B"</div>
+                        </div>
+                        
+                        <div class="mb-4 animate__animated animate__fadeIn animate__delay-2s">
+                            <label for="description" class="form-label">Description</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light align-items-start pt-2"><i class="bi bi-card-text"></i></span>
+                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Provide details about this location...">{{ location.description or '' }}</textarea>
+                            </div>
+                            <div class="form-text">Information about where this location is physically situated, access restrictions, etc.</div>
+                        </div>
+                        
+                        <div class="mb-4 animate__animated animate__fadeIn animate__delay-3s">
+                            <label for="capacity" class="form-label">Storage Capacity</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-boxes"></i></span>
+                                <input type="number" class="form-control" id="capacity" name="capacity" min="0" value="{{ location.capacity or '' }}" placeholder="Leave empty for unlimited capacity">
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-lightbulb text-warning me-1"></i> 
+                                Number of items this location can store. Leave empty for unlimited capacity.
+                            </div>
+                        </div>
+                        
+                        {% if location.capacity %}
+                        <div class="mb-4 animate__animated animate__fadeIn animate__delay-4s">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Current Usage</span>
+                                <span>{{ location.item_count }}/{{ location.capacity }}</span>
+                            </label>
+                            <div class="progress mb-2" style="height: 10px;">
+                                {% set usage_percentage = (location.item_count / location.capacity * 100) %}
+                                {% if usage_percentage >= 90 %}
+                                <div class="progress-bar bg-danger" role="progressbar" 
+                                     style="width: {{ usage_percentage }}%;" 
+                                     aria-valuenow="{{ location.item_count }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="{{ location.capacity }}"></div>
+                                {% elif usage_percentage >= 75 %}
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {{ usage_percentage }}%;" 
+                                     aria-valuenow="{{ location.item_count }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="{{ location.capacity }}"></div>
+                                {% else %}
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ usage_percentage }}%;" 
+                                     aria-valuenow="{{ location.item_count }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="{{ location.capacity }}"></div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="text-muted small">
+                                {% if usage_percentage >= 90 %}
+                                <i class="bi bi-exclamation-triangle-fill text-danger"></i> Critical capacity level
+                                {% elif usage_percentage >= 75 %}
+                                <i class="bi bi-exclamation-circle-fill text-warning"></i> Approaching maximum capacity
+                                {% else %}
+                                <i class="bi bi-check-circle-fill text-success"></i> Sufficient space available
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between mt-4 pt-3 border-top animate__animated animate__fadeIn animate__delay-5s">
+                            <a href="{{ url_for('locations') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block page_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation to form inputs when focused
+        const formInputs = document.querySelectorAll('#editLocationForm .form-control');
+        formInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentNode.classList.add('animate__animated', 'animate__pulse');
+                this.parentNode.style.boxShadow = '0 0 0 0.25rem rgba(25, 135, 84, 0.25)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentNode.classList.remove('animate__animated', 'animate__pulse');
+                this.parentNode.style.boxShadow = '';
+            });
+        });
+    });
+</script>
+
+<style>
+    .location-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .gradient-text {
+        background: linear-gradient(45deg, #198754, #20c997);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    .staggered-form > div {
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
+{% endblock %}

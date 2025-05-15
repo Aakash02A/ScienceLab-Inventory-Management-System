@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block title %}View Item: {{ item.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4 animate__animated animate__fadeIn">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="display-6"><i class="bi bi-eye-fill me-2 text-primary"></i> Item Details</h2>
+        <a href="{{ url_for('items') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> Back to Items
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+            <h3 class="card-title mb-0">{{ item.name }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3 text-primary">Basic Information</h6>
+                    <dl class="row">
+                        <dt class="col-sm-4">Category</dt>
+                        <dd class="col-sm-8">
+                            {% if item.category == 'chemicals' %}
+                            <span class="badge bg-info bg-opacity-75"><i class="bi bi-droplet-fill me-1"></i>{{ item.category|capitalize }}</span>
+                            {% elif item.category == 'equipment' %}
+                            <span class="badge bg-primary bg-opacity-75"><i class="bi bi-tools me-1"></i>{{ item.category|capitalize }}</span>
+                            {% elif item.category == 'consumables' %}
+                            <span class="badge bg-success bg-opacity-75"><i class="bi bi-basket-fill me-1"></i>{{ item.category|capitalize }}</span>
+                            {% elif item.category == 'glassware' %}
+                            <span class="badge bg-secondary bg-opacity-75"><i class="bi bi-cup-fill me-1"></i>{{ item.category|capitalize }}</span>
+                            {% else %}
+                            <span class="badge bg-dark bg-opacity-75">{{ item.category|capitalize }}</span>
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-4">Description</dt>
+                        <dd class="col-sm-8">{{ item.description or 'N/A' }}</dd>
+                        
+                        <dt class="col-sm-4">Barcode</dt>
+                        <dd class="col-sm-8">
+                            {% if item.barcode %}
+                            <span class="d-inline-block border p-2 bg-light rounded">
+                                <i class="bi bi-upc-scan me-1"></i>{{ item.barcode }}
+                            </span>
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            {% if item.status == 'in_stock' %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle-fill me-1"></i>In Stock
+                            </span>
+                            {% elif item.status == 'low_stock' %}
+                            <span class="badge bg-warning animate__animated animate__pulse animate__infinite">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>Low Stock
+                            </span>
+                            {% elif item.status == 'out_of_stock' %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-x-circle-fill me-1"></i>Out of Stock
+                            </span>
+                            {% elif item.status == 'expiring_soon' %}
+                            <span class="badge bg-info">
+                                <i class="bi bi-clock-fill me-1"></i>Expiring Soon
+                            </span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3 text-primary">Inventory Details</h6>
+                    <dl class="row">
+                        <dt class="col-sm-5">Current Quantity</dt>
+                        <dd class="col-sm-7">
+                            <span class="fw-bold">{{ item.quantity }}</span> {{ item.unit }}
+                        </dd>
+                        
+                        <dt class="col-sm-5">Minimum Quantity</dt>
+                        <dd class="col-sm-7">{{ item.min_quantity or '0' }} {{ item.unit }}</dd>
+                        
+                        <dt class="col-sm-5">Location</dt>
+                        <dd class="col-sm-7">
+                            {% if item.location_name %}
+                            <i class="bi bi-geo-alt-fill me-1 text-primary"></i>{{ item.location_name }}
+                            {% else %}
+                            <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-5">Supplier</dt>
+                        <dd class="col-sm-7">
+                            {% if item.supplier_name %}
+                            <i class="bi bi-shop me-1 text-primary"></i>{{ item.supplier_name }}
+                            {% else %}
+                            <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-5">Price</dt>
+                        <dd class="col-sm-7">{{ '$%.2f'|format(item.price) if item.price else 'N/A' }}</dd>
+                    </dl>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3 text-primary">Safety Information</h6>
+                    <dl class="row">
+                        <dt class="col-sm-5">Hazard Type</dt>
+                        <dd class="col-sm-7">
+                            {% if item.hazard_type %}
+                                {% if item.hazard_type == 'flammable' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-fire"></i> Flammable
+                                    </span>
+                                {% elif item.hazard_type == 'corrosive' %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-droplet"></i> Corrosive
+                                    </span>
+                                {% elif item.hazard_type == 'toxic' %}
+                                    <span class="badge bg-dark">
+                                        <i class="bi bi-exclamation-diamond"></i> Toxic
+                                    </span>
+                                {% elif item.hazard_type == 'oxidizing' %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-circle"></i> Oxidizing
+                                    </span>
+                                {% elif item.hazard_type == 'explosive' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-octagon"></i> Explosive
+                                    </span>
+                                {% elif item.hazard_type == 'harmful' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation-triangle"></i> Harmful
+                                    </span>
+                                {% elif item.hazard_type == 'irritant' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation"></i> Irritant
+                                    </span>
+                                {% elif item.hazard_type == 'environmental' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-tree"></i> Environmental Hazard
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-5">Storage Condition</dt>
+                        <dd class="col-sm-7">
+                            {% if item.storage_condition %}
+                                {% if item.storage_condition == 'room_temperature' %}
+                                    <i class="bi bi-thermometer-half"></i> Room Temperature
+                                {% elif item.storage_condition == 'refrigerated' %}
+                                    <i class="bi bi-thermometer-snow"></i> Refrigerated
+                                {% elif item.storage_condition == 'frozen' %}
+                                    <i class="bi bi-snow"></i> Frozen
+                                {% elif item.storage_condition == 'dry' %}
+                                    <i class="bi bi-moisture"></i> Dry
+                                {% elif item.storage_condition == 'dark' %}
+                                    <i class="bi bi-moon"></i> Dark
+                                {% elif item.storage_condition == 'ventilated' %}
+                                    <i class="bi bi-wind"></i> Ventilated
+                                {% endif %}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-5">MSDS URL</dt>
+                        <dd class="col-sm-7">
+                            {% if item.msds_url %}
+                            <a href="{{ item.msds_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-text"></i> View MSDS
+                            </a>
+                            {% else %}
+                            <span class="text-muted">Not available</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3 text-primary">Additional Details</h6>
+                    <dl class="row">
+                        <dt class="col-sm-5">Date Added</dt>
+                        <dd class="col-sm-7">
+                            {% if item.created_at %}
+                            <i class="bi bi-calendar-date me-1"></i> {{ item.created_at.strftime('%Y-%m-%d') }}
+                            {% else %}
+                            <span class="text-muted">Unknown</span>
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-5">Last Updated</dt>
+                        <dd class="col-sm-7">
+                            {% if item.updated_at %}
+                            <i class="bi bi-calendar-check me-1"></i> {{ item.updated_at.strftime('%Y-%m-%d') }}
+                            {% else %}
+                            <span class="text-muted">Never</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil-fill me-1"></i> Edit Item
+            </a>
+            <form action="{{ url_for('delete_item', item_id=item.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash-fill me-1"></i> Delete Item
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

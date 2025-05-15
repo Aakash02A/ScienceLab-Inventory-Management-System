@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block title %}Orders - SciLabIMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 animate__animated animate__fadeInDown">
+    <div>
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-cart text-primary me-2"></i> 
+            <span class="gradient-text">Orders Management</span>
+        </h1>
+        <p class="text-muted">Track, manage, and approve laboratory purchase orders</p>
+    </div>
+    <button type="button" class="btn btn-primary animate__animated animate__pulse animate__repeat-2" data-bs-toggle="modal" data-bs-target="#addOrderModal">
+        <i class="bi bi-plus-lg me-2"></i> Create Order
+    </button>
+</div>
+
+<div class="card shadow-sm border-0 animate__animated animate__fadeIn animate__delay-1s">
+    <div class="card-header bg-white">
+        <ul class="nav nav-tabs card-header-tabs" id="orderTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="true">
+                    <i class="bi bi-clipboard-data me-1"></i> All Orders
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="false">
+                    <i class="bi bi-hourglass-split me-1"></i> Pending
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab" aria-controls="approved" aria-selected="false">
+                    <i class="bi bi-check-circle me-1"></i> Approved
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ordered-tab" data-bs-toggle="tab" data-bs-target="#ordered" type="button" role="tab" aria-controls="ordered" aria-selected="false">
+                    <i class="bi bi-truck me-1"></i> Ordered
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab" aria-controls="received" aria-selected="false">
+                    <i class="bi bi-box-seam me-1"></i> Received
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled" type="button" role="tab" aria-controls="cancelled" aria-selected="false">
+                    <i class="bi bi-x-circle me-1"></i> Cancelled
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-0">
+        <div class="tab-content" id="orderTabContent">
+            <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                {% include 'partials/orders_table.html' with context %}
+            </div>
+            <div class="tab-pane fade" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                {% with filtered_orders = orders|selectattr("status", "equalto", "pending")|list %}
+                    {% include 'partials/orders_table.html' with context %}
+                {% endwith %}
+            </div>
+            <div class="tab-pane fade" id="approved" role="tabpanel" aria-labelledby="approved-tab">
+                {% with filtered_orders = orders|selectattr("status", "equalto", "approved")|list %}
+                    {% include 'partials/orders_table.html' with context %}
+                {% endwith %}
+            </div>
+            <div class="tab-pane fade" id="ordered" role="tabpanel" aria-labelledby="ordered-tab">
+                {% with filtered_orders = orders|selectattr("status", "equalto", "ordered")|list %}
+                    {% include 'partials/orders_table.html' with context %}
+                {% endwith %}
+            </div>
+            <div class="tab-pane fade" id="received" role="tabpanel" aria-labelledby="received-tab">
+                {% with filtered_orders = orders|selectattr("status", "equalto", "received")|list %}
+                    {% include 'partials/orders_table.html' with context %}
+                {% endwith %}
+            </div>
+            <div class="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
+                {% with filtered_orders = orders|selectattr("status", "equalto", "cancelled")|list %}
+                    {% include 'partials/orders_table.html' with context %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Stats Cards -->
+<div class="row g-3 mt-4 animate__animated animate__fadeInUp">
+    <!-- Pending Orders -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm hover-lift border-start border-warning border-5">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-shrink-0 p-3 bg-warning-subtle rounded">
+                    <i class="bi bi-hourglass-split text-warning fs-2"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="text-muted mb-1">Pending Orders</h6>
+                    <h3 class="mb-0">{{ orders|selectattr("status", "equalto", "pending")|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Orders in Transit -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm hover-lift border-start border-info border-5">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-shrink-0 p-3 bg-info-subtle rounded">
+                    <i class="bi bi-truck text-info fs-2"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="text-muted mb-1">In Transit</h6>
+                    <h3 class="mb-0">{{ orders|selectattr("status", "equalto", "ordered")|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Received Orders -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm hover-lift border-start border-success border-5">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-shrink-0 p-3 bg-success-subtle rounded">
+                    <i class="bi bi-box-seam text-success fs-2"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="text-muted mb-1">Received Orders</h6>
+                    <h3 class="mb-0">{{ orders|selectattr("status", "equalto", "received")|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Order Modal -->
+<div class="modal fade" id="addOrderModal" tabindex="-1" aria-labelledby="addOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addOrderModalLabel">
+                    <i class="bi bi-cart-plus me-2"></i> Create New Order
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="p-2">
+                    <div class="alert alert-info animate__animated animate__fadeIn">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-info-circle-fill fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="alert-heading">Creating a New Purchase Order</h6>
+                                <p class="mb-0">Add items to your order and specify supplier details. Orders will first go into "Pending" status until approved.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form action="{{ url_for('add_order') }}" method="post" id="addOrderForm" class="mt-4">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label for="supplier_id" class="form-label">Supplier</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-building"></i></span>
+                                    <select class="form-select" id="supplier_id" name="supplier_id">
+                                        <option value="" selected>Select supplier (optional)</option>
+                                        {% for supplier in suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Order Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-calendar3"></i></span>
+                                    <input type="text" class="form-control" value="{{ now.strftime('%Y-%m-%d') }}" disabled>
+                                </div>
+                                <div class="form-text">Current date is used</div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="notes" class="form-label">Order Notes</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light align-items-start pt-2"><i class="bi bi-sticky"></i></span>
+                                    <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Add any special instructions or notes for this order..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                            <h6 class="text-primary mb-0"><i class="bi bi-box me-2"></i>Order Items</h6>
+                            <div class="order-total-container bg-light py-1 px-3 rounded shadow-sm" id="order-total">
+                                <span class="fw-bold">Total: </span><span class="text-success fw-bold">$0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div id="order-items-container">
+                            <div class="item-row card mb-3 shadow-sm border-0 animate__animated animate__fadeInDown">
+                                <div class="card-body">
+                                    <div class="row g-2">
+                                        <div class="col-md-5">
+                                            <label class="form-label">Item</label>
+                                            <select class="form-select item-selector" name="item_id[]">
+                                                <option value="" selected>New item</option>
+                                                {% for item in items %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <label class="form-label">Item Name</label>
+                                            <input type="text" class="form-control" name="item_name[]" required placeholder="Enter item name">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Quantity</label>
+                                            <input type="number" class="form-control item-quantity" name="quantity[]" step="0.01" min="0.01" required value="1">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Unit</label>
+                                            <select class="form-select" name="unit[]">
+                                                <option value="units" selected>Units</option>
+                                                <option value="bottles">Bottles</option>
+                                                <option value="boxes">Boxes</option>
+                                                <option value="packs">Packs</option>
+                                                <option value="grams">Grams</option>
+                                                <option value="liters">Liters</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Price (per unit)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control item-price" name="price[]" step="0.01" min="0" value="0.00" onblur="formatCurrency(this)">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="button" class="btn btn-outline-danger form-control remove-item-row">
+                                                <i class="bi bi-trash me-1"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="add-item-row" class="btn btn-outline-primary w-100 hover-lift">
+                            <i class="bi bi-plus-lg me-2"></i> Add Another Item
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Template for new item rows -->
+                <template id="item-row-template">
+                    <div class="item-row card mb-3 shadow-sm border-0 animate__animated animate__fadeInDown">
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-md-5">
+                                    <label class="form-label">Item</label>
+                                    <select class="form-select item-selector" name="item_id[]">
+                                        <option value="" selected>New item</option>
+                                        {% for item in items %}
+                                        <option value="{{ item.id }}">{{ item.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label">Item Name</label>
+                                    <input type="text" class="form-control" name="item_name[]" required placeholder="Enter item name">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="number" class="form-control item-quantity" name="quantity[]" step="0.01" min="0.01" required value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Unit</label>
+                                    <select class="form-select" name="unit[]">
+                                        <option value="units" selected>Units</option>
+                                        <option value="bottles">Bottles</option>
+                                        <option value="boxes">Boxes</option>
+                                        <option value="packs">Packs</option>
+                                        <option value="grams">Grams</option>
+                                        <option value="liters">Liters</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Price (per unit)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control item-price" name="price[]" step="0.01" min="0" value="0.00" onblur="formatCurrency(this)">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="button" class="btn btn-outline-danger form-control remove-item-row">
+                                        <i class="bi bi-trash me-1"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addOrderForm" class="btn btn-primary">
+                    <i class="bi bi-cart-check me-2"></i> Create Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to dynamically calculate order total -->
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to calculate and update order total
+        function updateOrderTotal() {
+            let total = 0;
+            
+            // Get all quantity and price fields
+            const quantities = document.querySelectorAll('.item-quantity');
+            const prices = document.querySelectorAll('.item-price');
+            
+            // Calculate total
+            for (let i = 0; i < quantities.length; i++) {
+                const quantity = parseFloat(quantities[i].value) || 0;
+                const price = parseFloat(prices[i].value) || 0;
+                total += quantity * price;
+            }
+            
+            // Update the total display
+            const orderTotal = document.querySelector('#order-total span:last-child');
+            if (orderTotal) {
+                orderTotal.textContent = '$' + total.toFixed(2);
+                
+                // Add animation
+                orderTotal.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => {
+                    orderTotal.classList.remove('animate__animated', 'animate__pulse');
+                }, 500);
+            }
+        }
+        
+        // Update total when input values change
+        document.querySelectorAll('.item-quantity, .item-price').forEach(input => {
+            input.addEventListener('input', updateOrderTotal);
+            input.addEventListener('change', updateOrderTotal);
+        });
+        
+        // Update when adding or removing rows
+        const container = document.getElementById('order-items-container');
+        const addButton = document.getElementById('add-item-row');
+        
+        if (addButton) {
+            const template = document.getElementById('item-row-template');
+            
+            addButton.addEventListener('click', function() {
+                const content = template.content.cloneNode(true);
+                container.appendChild(content);
+                
+                // Add event listeners to the new elements
+                const newRow = container.lastElementChild;
+                
+                newRow.querySelectorAll('.item-quantity, .item-price').forEach(input => {
+                    input.addEventListener('input', updateOrderTotal);
+                    input.addEventListener('change', updateOrderTotal);
+                });
+                
+                newRow.querySelector('.remove-item-row').addEventListener('click', function() {
+                    newRow.classList.add('animate__fadeOutUp');
+                    setTimeout(() => {
+                        newRow.remove();
+                        updateOrderTotal();
+                    }, 500);
+                });
+                
+                // Update the total
+                updateOrderTotal();
+            });
+        }
+        
+        // Add event listeners to initial remove buttons
+        document.querySelectorAll('.remove-item-row').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('.item-row');
+                row.classList.add('animate__fadeOutUp');
+                setTimeout(() => {
+                    row.remove();
+                    updateOrderTotal();
+                }, 500);
+            });
+        });
+        
+        // Initialize total
+        updateOrderTotal();
+    });
+</script>
+{% endblock %}
+{% endblock %}

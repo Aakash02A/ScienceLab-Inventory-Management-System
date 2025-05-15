@@ -1,0 +1,50 @@
+<div class="mb-3 p-3">
+    <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control" id="searchTransactions" placeholder="Search transactions...">
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover transactions-table">
+        <thead class="table-light">
+            <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>User</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set transaction_list = filtered_transactions if filtered_transactions is defined else transactions %}
+            {% if transaction_list and transaction_list|length > 0 %}
+                {% for transaction in transaction_list %}
+                <tr>
+                    <td>{{ transaction.timestamp }}</td>
+                    <td>{{ transaction.item_name }}</td>
+                    <td>
+                        {% if transaction.type == 'check_in' %}
+                        <span class="badge bg-success">Check In</span>
+                        {% elif transaction.type == 'check_out' %}
+                        <span class="badge bg-danger">Check Out</span>
+                        {% elif transaction.type == 'restock' %}
+                        <span class="badge bg-primary">Restock</span>
+                        {% elif transaction.type == 'dispose' %}
+                        <span class="badge bg-warning">Dispose</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ transaction.quantity }}</td>
+                    <td>{{ transaction.user_name }}</td>
+                    <td>{{ transaction.notes or '-' }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-3">No transactions found.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>

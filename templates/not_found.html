@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}404 Not Found - SLIMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="error-container mt-5">
+            <h1 class="display-1 text-primary">404</h1>
+            <h2 class="mb-4">Page Not Found</h2>
+            <p class="lead mb-5">The page you're looking for doesn't exist or has been moved.</p>
+            
+            <div class="mb-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-house"></i> Go to Home
+                </a>
+            </div>
+            
+            <div class="card mt-5">
+                <div class="card-body">
+                    <h5 class="card-title">Looking for something specific?</h5>
+                    <div class="list-group mt-3">
+                        <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-speedometer2 text-primary me-2"></i> Dashboard
+                        </a>
+                        <a href="{{ url_for('items') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-box-seam text-primary me-2"></i> Inventory Management
+                        </a>
+                        <a href="{{ url_for('transactions') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-arrow-left-right text-primary me-2"></i> Transactions
+                        </a>
+                        <a href="{{ url_for('orders') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-cart text-primary me-2"></i> Orders
+                        </a>
+                        <a href="{{ url_for('reports') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-graph-up text-primary me-2"></i> Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

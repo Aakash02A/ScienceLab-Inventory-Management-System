@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Item - SLIMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-pencil-square"></i> Edit Item</h1>
+    <a href="{{ url_for('items') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Inventory
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body p-4">
+        <form action="{{ url_for('edit_item', item_id=item.id) }}" method="post">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">Item Name *</label>
+                    <input type="text" class="form-control" id="name" name="name" required value="{{ item.name }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="category" class="form-label">Category *</label>
+                    <select class="form-select" id="category" name="category" required>
+                        <option value="chemicals" {% if item.category == 'chemicals' %}selected{% endif %}>Chemicals</option>
+                        <option value="equipment" {% if item.category == 'equipment' %}selected{% endif %}>Equipment</option>
+                        <option value="consumables" {% if item.category == 'consumables' %}selected{% endif %}>Consumables</option>
+                        <option value="glassware" {% if item.category == 'glassware' %}selected{% endif %}>Glassware</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="barcode" class="form-label">Barcode</label>
+                    <input type="text" class="form-control" id="barcode" name="barcode" value="{{ item.barcode or '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="location_id" class="form-label">Storage Location</label>
+                    <select class="form-select" id="location_id" name="location_id">
+                        <option value="">Select location</option>
+                        {% for location in locations %}
+                        <option value="{{ location.id }}" {% if item.location_id == location.id %}selected{% endif %}>{{ location.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="quantity" class="form-label">Quantity *</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" step="0.01" min="0" required value="{{ item.quantity }}" onchange="updateItemStatus()">
+                </div>
+                <div class="col-md-4">
+                    <label for="unit" class="form-label">Unit *</label>
+                    <select class="form-select" id="unit" name="unit" required>
+                        <optgroup label="Count Units">
+                            <option value="units" {% if item.unit == 'units' %}selected{% endif %}>Units</option>
+                            <option value="pieces" {% if item.unit == 'pieces' %}selected{% endif %}>Pieces</option>
+                            <option value="sets" {% if item.unit == 'sets' %}selected{% endif %}>Sets</option>
+                            <option value="kits" {% if item.unit == 'kits' %}selected{% endif %}>Kits</option>
+                        </optgroup>
+                        <optgroup label="Volume Units">
+                            <option value="ml" {% if item.unit == 'ml' %}selected{% endif %}>Milliliters (ml)</option>
+                            <option value="liters" {% if item.unit == 'liters' %}selected{% endif %}>Liters (L)</option>
+                            <option value="gallons" {% if item.unit == 'gallons' %}selected{% endif %}>Gallons (gal)</option>
+                            <option value="microliters" {% if item.unit == 'microliters' %}selected{% endif %}>Microliters (μL)</option>
+                        </optgroup>
+                        <optgroup label="Weight Units">
+                            <option value="mg" {% if item.unit == 'mg' %}selected{% endif %}>Milligrams (mg)</option>
+                            <option value="grams" {% if item.unit == 'grams' %}selected{% endif %}>Grams (g)</option>
+                            <option value="kg" {% if item.unit == 'kg' %}selected{% endif %}>Kilograms (kg)</option>
+                            <option value="micrograms" {% if item.unit == 'micrograms' %}selected{% endif %}>Micrograms (μg)</option>
+                        </optgroup>
+                        <optgroup label="Packaging">
+                            <option value="bottles" {% if item.unit == 'bottles' %}selected{% endif %}>Bottles</option>
+                            <option value="boxes" {% if item.unit == 'boxes' %}selected{% endif %}>Boxes</option>
+                            <option value="packs" {% if item.unit == 'packs' %}selected{% endif %}>Packs</option>
+                            <option value="vials" {% if item.unit == 'vials' %}selected{% endif %}>Vials</option>
+                            <option value="tubes" {% if item.unit == 'tubes' %}selected{% endif %}>Tubes</option>
+                            <option value="plates" {% if item.unit == 'plates' %}selected{% endif %}>Plates</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="min_quantity" class="form-label">Min. Quantity</label>
+                    <input type="number" class="form-control" id="min_quantity" name="min_quantity" step="0.01" min="0" value="{{ item.min_quantity or 0 }}" onchange="updateItemStatus()">
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="price" class="form-label">Price</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="{{ item.price or 0.00 }}" onblur="formatCurrency(this)">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="supplier_id" class="form-label">Supplier</label>
+                    <select class="form-select" id="supplier_id" name="supplier_id">
+                        <option value="">Select supplier</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}" {% if item.supplier_id == supplier.id %}selected{% endif %}>{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="expiry_date" class="form-label">Expiry Date</label>
+                    <input type="date" class="form-control" id="expiry_date" name="expiry_date" value="{{ item.expiry_date or '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="status" class="form-label">Status</label>
+                    <div>
+                        <span id="status-display" class="badge 
+                            {% if item.status == 'in_stock' %}bg-success
+                            {% elif item.status == 'low_stock' %}bg-warning
+                            {% elif item.status == 'out_of_stock' %}bg-danger
+                            {% elif item.status == 'expiring_soon' %}bg-info
+                            {% endif %}">
+                            {{ item.status.replace('_', ' ').title() }}
+                        </span>
+                        <small class="text-muted">(Automatically determined based on quantity)</small>
+                        <input type="hidden" id="status" name="status" value="{{ item.status }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="hazard_type" class="form-label">Hazard Type</label>
+                    <select class="form-select" id="hazard_type" name="hazard_type">
+                        <option value="" {% if item.hazard_type is none or item.hazard_type == '' %}selected{% endif %}>None</option>
+                        <option value="flammable" {% if item.hazard_type == 'flammable' %}selected{% endif %}>Flammable</option>
+                        <option value="corrosive" {% if item.hazard_type == 'corrosive' %}selected{% endif %}>Corrosive</option>
+                        <option value="toxic" {% if item.hazard_type == 'toxic' %}selected{% endif %}>Toxic</option>
+                        <option value="oxidizing" {% if item.hazard_type == 'oxidizing' %}selected{% endif %}>Oxidizing</option>
+                        <option value="explosive" {% if item.hazard_type == 'explosive' %}selected{% endif %}>Explosive</option>
+                        <option value="harmful" {% if item.hazard_type == 'harmful' %}selected{% endif %}>Harmful</option>
+                        <option value="irritant" {% if item.hazard_type == 'irritant' %}selected{% endif %}>Irritant</option>
+                        <option value="environmental" {% if item.hazard_type == 'environmental' %}selected{% endif %}>Environmental Hazard</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="storage_condition" class="form-label">Storage Condition</label>
+                    <select class="form-select" id="storage_condition" name="storage_condition">
+                        <option value="" {% if item.storage_condition is none or item.storage_condition == '' %}selected{% endif %}>None</option>
+                        <option value="room_temperature" {% if item.storage_condition == 'room_temperature' %}selected{% endif %}>Room Temperature</option>
+                        <option value="refrigerated" {% if item.storage_condition == 'refrigerated' %}selected{% endif %}>Refrigerated</option>
+                        <option value="frozen" {% if item.storage_condition == 'frozen' %}selected{% endif %}>Frozen</option>
+                        <option value="dry" {% if item.storage_condition == 'dry' %}selected{% endif %}>Dry</option>
+                        <option value="dark" {% if item.storage_condition == 'dark' %}selected{% endif %}>Dark</option>
+                        <option value="ventilated" {% if item.storage_condition == 'ventilated' %}selected{% endif %}>Ventilated</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3">{{ item.description or '' }}</textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label for="msds_url" class="form-label">MSDS URL</label>
+                <input type="url" class="form-control" id="msds_url" name="msds_url" placeholder="https://example.com/msds.pdf" value="{{ item.msds_url or '' }}">
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('items') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize status display when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        updateItemStatus();
+    });
+</script>
+{% endblock %}

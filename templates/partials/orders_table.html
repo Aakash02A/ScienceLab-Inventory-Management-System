@@ -1,0 +1,328 @@
+<div class="mb-3 p-3 animate__animated animate__fadeIn">
+    <div class="input-group shadow-sm">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control ps-0 border-start-0" id="searchOrders" placeholder="Search by order number, supplier, or status...">
+        <button class="btn btn-outline-secondary" type="button">
+            <i class="bi bi-funnel"></i> Filter
+        </button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle orders-table">
+        <thead class="table-light">
+            <tr>
+                <th>Order #</th>
+                <th>Supplier</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody class="staggered-list">
+            {% set order_list = filtered_orders if filtered_orders is defined else orders %}
+            {% if order_list and order_list|length > 0 %}
+                {% for order in order_list %}
+                <tr class="order-row animate__animated animate__fadeIn" data-order-id="{{ order.id }}">
+                    <td><strong>#{{ order.id }}</strong></td>
+                    <td>
+                        {% if order.supplier_name %}
+                            <div class="d-flex align-items-center">
+                                <div class="supplier-icon bg-light rounded-circle p-1 me-2">
+                                    <i class="bi bi-building text-secondary"></i>
+                                </div>
+                                <span>{{ order.supplier_name }}</span>
+                            </div>
+                        {% else %}
+                            <span class="text-muted">Not specified</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ order.created_at.split(' ')[0] }}</td>
+                    <td>
+                        <span class="badge rounded-pill bg-info-subtle text-info">
+                            <i class="bi bi-box me-1"></i> Items
+                        </span>
+                    </td>
+                    <td><span class="text-success fw-bold">${{ "%.2f"|format(order.total_cost) }}</span></td>
+                    <td>
+                        {% if order.status == 'pending' %}
+                        <span class="badge rounded-pill bg-warning-subtle text-warning">
+                            <i class="bi bi-hourglass-split me-1"></i> Pending
+                        </span>
+                        {% elif order.status == 'approved' %}
+                        <span class="badge rounded-pill bg-primary-subtle text-primary">
+                            <i class="bi bi-check-circle me-1"></i> Approved
+                        </span>
+                        {% elif order.status == 'ordered' %}
+                        <span class="badge rounded-pill bg-info-subtle text-info">
+                            <i class="bi bi-truck me-1"></i> Ordered
+                        </span>
+                        {% elif order.status == 'received' %}
+                        <span class="badge rounded-pill bg-success-subtle text-success">
+                            <i class="bi bi-box-seam me-1"></i> Received
+                        </span>
+                        {% elif order.status == 'cancelled' %}
+                        <span class="badge rounded-pill bg-danger-subtle text-danger">
+                            <i class="bi bi-x-circle me-1"></i> Cancelled
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewOrderModal{{ order.id }}" data-bs-toggle="tooltip" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            {% if order.status != 'received' and order.status != 'cancelled' %}
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateOrderStatusModal{{ order.id }}" data-bs-toggle="tooltip" title="Update Status">
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                            {% endif %}
+                            {% if order.status == 'pending' %}
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteOrderModal{{ order.id }}" data-bs-toggle="tooltip" title="Cancel Order">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- View Order Modal -->
+                        <div class="modal fade" id="viewOrderModal{{ order.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Order #{{ order.id }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row mb-4">
+                                            <div class="col-md-6">
+                                                <h6>Order Information</h6>
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">Order Number</dt>
+                                                    <dd class="col-sm-8">{{ order.id }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Supplier</dt>
+                                                    <dd class="col-sm-8">{{ order.supplier_name or 'Not specified' }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Status</dt>
+                                                    <dd class="col-sm-8">
+                                                        {% if order.status == 'pending' %}
+                                                        <span class="badge bg-warning">Pending</span>
+                                                        {% elif order.status == 'approved' %}
+                                                        <span class="badge bg-primary">Approved</span>
+                                                        {% elif order.status == 'ordered' %}
+                                                        <span class="badge bg-info">Ordered</span>
+                                                        {% elif order.status == 'received' %}
+                                                        <span class="badge bg-success">Received</span>
+                                                        {% elif order.status == 'cancelled' %}
+                                                        <span class="badge bg-danger">Cancelled</span>
+                                                        {% endif %}
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-4">Total Cost</dt>
+                                                    <dd class="col-sm-8">${{ "%.2f"|format(order.total_cost) }}</dd>
+                                                </dl>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Timestamps & Users</h6>
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">Created Date</dt>
+                                                    <dd class="col-sm-8">{{ order.created_at }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Last Updated</dt>
+                                                    <dd class="col-sm-8">{{ order.updated_at }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Ordered By</dt>
+                                                    <dd class="col-sm-8">{{ order.ordered_by_name }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Approved By</dt>
+                                                    <dd class="col-sm-8">{{ order.approved_by_name or 'Not yet approved' }}</dd>
+                                                </dl>
+                                            </div>
+                                        </div>
+                                        
+                                        <h6 class="border-bottom pb-2 mb-3">Order Items</h6>
+                                        {% if order.order_items %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Item</th>
+                                                        <th>Quantity</th>
+                                                        <th>Unit</th>
+                                                        <th>Price</th>
+                                                        <th>Subtotal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in order.order_items %}
+                                                    <tr>
+                                                        <td>{{ item.name }}</td>
+                                                        <td>{{ item.quantity }}</td>
+                                                        <td>{{ item.unit }}</td>
+                                                        <td>${{ "%.2f"|format(item.price or 0) }}</td>
+                                                        <td>${{ "%.2f"|format((item.price or 0) * item.quantity) }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    <tr class="table-light">
+                                                        <td colspan="4" class="text-end fw-bold">Total:</td>
+                                                        <td class="fw-bold">${{ "%.2f"|format(order.total_cost) }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% else %}
+                                        <p class="text-muted">No items in this order.</p>
+                                        {% endif %}
+                                        
+                                        {% if order.notes %}
+                                        <div class="mt-3">
+                                            <h6>Notes</h6>
+                                            <p>{{ order.notes }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        {% if order.status != 'received' and order.status != 'cancelled' %}
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateOrderStatusModal{{ order.id }}">
+                                            <i class="bi bi-arrow-right"></i> Update Status
+                                        </button>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Update Order Status Modal -->
+                        <div class="modal fade" id="updateOrderStatusModal{{ order.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Update Order Status</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="{{ url_for('update_order_status', order_id=order.id) }}" method="post" id="updateOrderForm{{ order.id }}">
+                                            <p>Current status: 
+                                                {% if order.status == 'pending' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                                {% elif order.status == 'approved' %}
+                                                <span class="badge bg-primary">Approved</span>
+                                                {% elif order.status == 'ordered' %}
+                                                <span class="badge bg-info">Ordered</span>
+                                                {% elif order.status == 'received' %}
+                                                <span class="badge bg-success">Received</span>
+                                                {% elif order.status == 'cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                                {% endif %}
+                                            </p>
+                                            
+                                            <div class="mb-3">
+                                                <label for="status{{ order.id }}" class="form-label">New Status</label>
+                                                <select class="form-select" id="status{{ order.id }}" name="status" required>
+                                                    <option value="" selected disabled>Select new status</option>
+                                                    {% if order.status == 'pending' %}
+                                                    <option value="approved">Approved</option>
+                                                    <option value="cancelled">Cancelled</option>
+                                                    {% elif order.status == 'approved' %}
+                                                    <option value="ordered">Ordered</option>
+                                                    <option value="cancelled">Cancelled</option>
+                                                    {% elif order.status == 'ordered' %}
+                                                    <option value="received">Received</option>
+                                                    <option value="cancelled">Cancelled</option>
+                                                    {% endif %}
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="alert alert-info" id="statusInfoApproved{{ order.id }}" style="display: none;">
+                                                <i class="bi bi-info-circle"></i> Marking as "Approved" means the order has been reviewed and approved for ordering.
+                                            </div>
+                                            
+                                            <div class="alert alert-info" id="statusInfoOrdered{{ order.id }}" style="display: none;">
+                                                <i class="bi bi-info-circle"></i> Marking as "Ordered" means a purchase order has been sent to the supplier.
+                                            </div>
+                                            
+                                            <div class="alert alert-info" id="statusInfoReceived{{ order.id }}" style="display: none;">
+                                                <i class="bi bi-info-circle"></i> Marking as "Received" will update inventory quantities automatically.
+                                            </div>
+                                            
+                                            <div class="alert alert-warning" id="statusInfoCancelled{{ order.id }}" style="display: none;">
+                                                <i class="bi bi-exclamation-triangle"></i> Marking as "Cancelled" will cancel this order. This action cannot be undone.
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" form="updateOrderForm{{ order.id }}" class="btn btn-primary">Update Status</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete Order Modal -->
+                        <div class="modal fade" id="deleteOrderModal{{ order.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Delete</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete Order #{{ order.id }}?</p>
+                                        {% if order.status != 'pending' %}
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> This order has already been processed. Consider cancelling it instead of deleting.
+                                        </div>
+                                        {% endif %}
+                                        <p class="text-danger">This action cannot be undone. All order items will also be deleted.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form action="{{ url_for('delete_order', order_id=order.id) }}" method="post">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-3">No orders found.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for order in order_list %}
+        const statusSelect{{ order.id }} = document.getElementById('status{{ order.id }}');
+        if (statusSelect{{ order.id }}) {
+            statusSelect{{ order.id }}.addEventListener('change', function() {
+                // Hide all info alerts
+                document.getElementById('statusInfoApproved{{ order.id }}').style.display = 'none';
+                document.getElementById('statusInfoOrdered{{ order.id }}').style.display = 'none';
+                document.getElementById('statusInfoReceived{{ order.id }}').style.display = 'none';
+                document.getElementById('statusInfoCancelled{{ order.id }}').style.display = 'none';
+                
+                // Show the relevant info alert
+                if (this.value === 'approved') {
+                    document.getElementById('statusInfoApproved{{ order.id }}').style.display = 'block';
+                } else if (this.value === 'ordered') {
+                    document.getElementById('statusInfoOrdered{{ order.id }}').style.display = 'block';
+                } else if (this.value === 'received') {
+                    document.getElementById('statusInfoReceived{{ order.id }}').style.display = 'block';
+                } else if (this.value === 'cancelled') {
+                    document.getElementById('statusInfoCancelled{{ order.id }}').style.display = 'block';
+                }
+            });
+        }
+        {% endfor %}
+    });
+</script>
