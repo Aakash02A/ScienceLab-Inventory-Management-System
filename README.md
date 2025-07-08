@@ -111,3 +111,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Bootstrap for responsive UI components
 - Flask framework for backend functionality
 - SQLite for database storage
+
+
+##Build by AAKASH
