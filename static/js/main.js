@@ -12,61 +12,29 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Popover(popoverTriggerEl);
     });
     
-    // Properly initialize all modals
+    // Properly handle modal cleanup
     const modalElements = document.querySelectorAll('.modal');
     modalElements.forEach(modalElement => {
-        const modal = new bootstrap.Modal(modalElement);
-        
-        // Add event listener to close the modal with escape key or clicking outside
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && modalElement.classList.contains('show')) {
-                modal.hide();
+        // Clean up backdrop when modal is hidden
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            // Remove any lingering backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            
+            // Ensure body scrolling is restored
+            if (!document.querySelector('.modal.show')) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
             }
         });
         
-        // Add a backup close button to each modal that might be stuck
-        const modalBackdrop = document.querySelectorAll('.modal-backdrop');
-        if (modalBackdrop.length > 0) {
-            modalBackdrop.forEach(backdrop => {
-                if (!backdrop.hasAttribute('data-emergency-button-added')) {
-                    const emergencyCloseBtn = document.createElement('button');
-                    emergencyCloseBtn.innerText = 'Emergency Close';
-                    emergencyCloseBtn.className = 'emergency-close-button';
-                    emergencyCloseBtn.style.position = 'fixed';
-                    emergencyCloseBtn.style.top = '10px';
-                    emergencyCloseBtn.style.right = '10px';
-                    emergencyCloseBtn.style.zIndex = '2000';
-                    emergencyCloseBtn.style.padding = '10px';
-                    emergencyCloseBtn.style.backgroundColor = 'red';
-                    emergencyCloseBtn.style.color = 'white';
-                    emergencyCloseBtn.style.border = 'none';
-                    emergencyCloseBtn.style.borderRadius = '5px';
-                    
-                    emergencyCloseBtn.addEventListener('click', function() {
-                        // Force remove the modal and backdrop
-                        const modals = document.querySelectorAll('.modal.show');
-                        modals.forEach(m => {
-                            m.classList.remove('show');
-                            m.style.display = 'none';
-                            m.setAttribute('aria-hidden', 'true');
-                            m.removeAttribute('aria-modal');
-                            m.removeAttribute('role');
-                        });
-                        
-                        const backdrops = document.querySelectorAll('.modal-backdrop');
-                        backdrops.forEach(b => b.remove());
-                        
-                        // Re-enable scrolling
-                        document.body.classList.remove('modal-open');
-                        document.body.style.overflow = '';
-                        document.body.style.paddingRight = '';
-                    });
-                    
-                    backdrop.appendChild(emergencyCloseBtn);
-                    backdrop.setAttribute('data-emergency-button-added', 'true');
-                }
-            });
-        }
+        // Ensure proper backdrop behavior
+        modalElement.addEventListener('show.bs.modal', function() {
+            // Remove any existing backdrops before showing new modal
+            const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+            existingBackdrops.forEach(backdrop => backdrop.remove());
+        });
     });
     
     // Auto-dismiss alerts after 5 seconds
@@ -707,97 +675,70 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(style);
 });
 
-// Function to ensure all modal action buttons work correctly
-function fixActionButtons() {
-    // Find all action buttons that open modals
+// Function to ensure modal buttons work correctly and handle cleanup
+function initializeModals() {
     const actionButtons = document.querySelectorAll('button[data-bs-toggle="modal"]');
     
     actionButtons.forEach(button => {
-        // Remove any existing click listeners
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-        
-        // Get the target modal ID
-        const modalId = newButton.getAttribute('data-bs-target');
+        const modalId = button.getAttribute('data-bs-target');
         if (!modalId) return;
         
-        // Find the corresponding modal element
         const modalElement = document.querySelector(modalId);
         if (!modalElement) return;
         
-        // Create a proper Bootstrap Modal instance
-        const modal = new bootstrap.Modal(modalElement);
-        
-        // Add a proper click handler
-        newButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Show the modal properly
-            modal.show();
-            
-            // Add safety measure - create close button if not present
-            const modalHeader = modalElement.querySelector('.modal-header');
-            if (modalHeader && !modalHeader.querySelector('.emergency-close')) {
-                const closeBtn = document.createElement('button');
-                closeBtn.className = 'btn btn-sm btn-danger emergency-close ms-2';
-                closeBtn.innerHTML = 'Stuck? Close';
-                closeBtn.style.display = 'none';
+        // Ensure modal has proper event handlers
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            // Clean up any lingering backdrops
+            setTimeout(() => {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
                 
-                // Show after a delay if the modal is still open
-                setTimeout(() => {
-                    if (modalElement.classList.contains('show')) {
-                        closeBtn.style.display = 'inline-block';
-                    }
-                }, 3000);
-                
-                closeBtn.addEventListener('click', function() {
-                    modal.hide();
-                    
-                    // Force cleanup if the modal hide doesn't work
-                    setTimeout(() => {
-                        if (modalElement.classList.contains('show')) {
-                            modalElement.classList.remove('show');
-                            modalElement.style.display = 'none';
-                            document.body.classList.remove('modal-open');
-                            const backdrop = document.querySelector('.modal-backdrop');
-                            if (backdrop) backdrop.remove();
-                        }
-                    }, 300);
-                });
-                
-                modalHeader.appendChild(closeBtn);
-            }
-        });
-        
-        // Ensure close buttons work properly
-        const closeButtons = modalElement.querySelectorAll('[data-bs-dismiss="modal"]');
-        closeButtons.forEach(closeBtn => {
-            // Remove existing listeners
-            const newCloseBtn = closeBtn.cloneNode(true);
-            closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-            
-            // Add proper close handler
-            newCloseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                modal.hide();
-                
-                // Double-check the modal is actually hidden
-                setTimeout(() => {
-                    if (modalElement.classList.contains('show')) {
-                        modalElement.classList.remove('show');
-                        modalElement.style.display = 'none';
-                        document.body.classList.remove('modal-open');
-                        const backdrop = document.querySelector('.modal-backdrop');
-                        if (backdrop) backdrop.remove();
-                    }
-                }, 300);
-            });
+                // Restore body scroll if no modals are open
+                if (!document.querySelector('.modal.show')) {
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }
+            }, 100);
         });
     });
 }
 
-// Helper function to handle any stuck modals
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initializeModals);
+
+// Helper function to force close stuck modals (safety mechanism)
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(modalElement => {
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+            modalInstance.hide();
+        } else {
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            modalElement.setAttribute('aria-hidden', 'true');
+            modalElement.removeAttribute('aria-modal');
+            modalElement.removeAttribute('role');
+        }
+    });
+    
+    // Remove all backdrops
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
+    
+    // Restore body scroll
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+}
+
+// Add global ESC key handler
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeAllModals();
+    }
+});
 function handleStuckModals() {
     // Create an emergency close button on the document body
     const existingButton = document.querySelector('#emergency-modal-close');

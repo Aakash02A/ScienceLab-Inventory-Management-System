@@ -5,11 +5,16 @@ import bcrypt
 from datetime import datetime, timedelta
 import json
 
-app = Flask(__name__)
+# Get the project root directory (one level up from slims/)
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(__name__, 
+            template_folder=os.path.join(_project_root, 'templates'),
+            static_folder=os.path.join(_project_root, 'static'))
 app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key_here')
 
-# Database path
-DATABASE = 'laboratory.db'
+# Database path (in project root)
+DATABASE = os.path.join(_project_root, 'laboratory.db')
 
 # Initialize the database
 def init_db():
@@ -246,8 +251,8 @@ def dict_factory(cursor, row):
         d[col[0]] = row[idx]
     return d
 
-# Initialize database
-init_db()
+# Database initialization is handled by slims/__init__.py
+# init_db() is no longer called here to avoid issues on import
 
 # Authentication check decorator
 def login_required(f):

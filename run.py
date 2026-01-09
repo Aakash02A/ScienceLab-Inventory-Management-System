@@ -1,4 +1,8 @@
-from app import app
+"""
+SLIMS - Science Laboratory Inventory Management System
+Application entry point
+"""
+from slims.app_legacy import app
 import webbrowser
 import threading
 import time
@@ -14,7 +18,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     
     # Start a thread to open the browser
-    threading.Thread(target=open_browser).start()
+    threading.Thread(target=open_browser, daemon=True).start()
     
     # Start the Flask application
     app.run(host='0.0.0.0', port=port, debug=True)
